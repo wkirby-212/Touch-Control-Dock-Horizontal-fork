@@ -22,10 +22,14 @@ bool obs_module_load(void)
 
     auto *label = new QLabel(
         "Touch Control Dock loaded.\n\n"
-        "This package includes a touch-first HTML control surface.\n"
-        "Load it as an OBS Browser Dock:\n"
+        "This plugin ships a touch-first HTML control surface at:\n"
         "  data/touch-ui/index.html\n\n"
-        "This native dock is only a lightweight confirmation/help panel."
+        "Load it as an OBS Browser Dock via:\n"
+        "  View -> Docks -> Custom Browser Docks\n\n"
+        "Tip: For HYTE Y70 Touch wide layout, add:\n"
+        "  ?layout=y70\n"
+        "to the URL/path.\n\n"
+        "This native dock is only a lightweight help/confirmation panel."
     );
 
     label->setWordWrap(true);
@@ -44,9 +48,7 @@ bool obs_module_load(void)
 void obs_module_unload(void)
 {
     obs_frontend_remove_dock("touch.control.help");
-
     delete g_helpWidget;
     g_helpWidget = nullptr;
-
     blog(LOG_INFO, "[Touch Control Dock] Unloaded.");
 }

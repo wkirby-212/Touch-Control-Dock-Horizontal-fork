@@ -3,464 +3,646 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-<title>OBS Touch Control</title>
+<title>Touch Control Dock</title>
 <style>
   :root{
     --pad: 18px;
-    --radius: 18px;
+    --radius: 20px;
     --font: 18px;
-    --gap: 14px;
+    --gap: 16px;
 
-    /* Black & gold theme */
-    --bg: #0b0b0e;
+    --bg: #050507;
     --surface: #111217;
     --surface-2: #161821;
     --text: #f5f5f7;
     --muted: #b9bcc7;
     --gold: #d7b25e;
-    --gold-2: #b8932f;
+    --gold-soft: #b8932f;
 
-    --border: 2px solid var(--gold);
-    --soft: var(--surface-2);
-    --accent-glow: 0 0 0 2px rgba(215,178,94,0.25);
+    --border: 3px solid var(--gold);
+    --accent-glow: 0 0 0 2px rgba(215,178,94,0.3);
   }
 
-  *{box-sizing:border-box;}
+  *{ box-sizing:border-box; }
 
   body{
-    font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-    margin: 0;
-    padding: var(--pad);
-    font-size: var(--font);
-    background: var(--bg);
-    color: var(--text);
+    font-family: system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    margin:0;
+    padding:16px;
+    font-size:var(--font);
+    background: radial-gradient(circle at top center,#1b1a23 0,#020204 60%,#000 100%);
+    color:var(--text);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:100vh;
   }
 
-  h1{
-    margin: 0 0 10px 0;
-    font-size: 1.6rem;
-    color: var(--gold);
-    letter-spacing: 0.3px;
-  }
+  h1,h2,h3{ margin:0; }
+
   h2{
-    margin: 26px 0 10px 0;
-    font-size: 1.25rem;
-    color: var(--gold);
+    font-size:1.3rem;
+    color:var(--gold);
   }
   h3{
-    margin: 14px 0 8px 0;
-    font-size: 1.05rem;
-    color: var(--text);
+    font-size:1.05rem;
+  }
+
+  .board{
+    border-radius:34px;
+    border:3px solid var(--gold);
+    max-width:1180px;
+    width:100%;
+    max-height:760px;
+    height:100%;
+    padding:30px 34px 26px;
+    background: radial-gradient(circle at top center,#191821 0,#050507 60%,#020203 100%);
+    box-shadow:
+      0 0 0 1px rgba(215,178,94,0.4),
+      0 18px 40px rgba(0,0,0,0.7);
+    display:flex;
+    flex-direction:column;
+  }
+
+  .board-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+  }
+
+  .board-title{
+    flex:1;
+    text-align:center;
+    font-size:2.6rem;
+    font-weight:800;
+    letter-spacing:0.3em;
+    text-transform:uppercase;
+    color:var(--gold);
+  }
+
+  .board-conn{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:0.9rem;
+  }
+  .conn-label{ color:var(--muted); }
+  .conn-pill{
+    padding:4px 10px;
+    border-radius:999px;
+    border:1px solid rgba(215,178,94,0.75);
+    font-size:0.85rem;
+    white-space:nowrap;
+  }
+
+  .view{
+    margin-top:26px;
+    flex:1;
+    min-height:0;
+    display:flex;
+    flex-direction:column;
+  }
+  .view[hidden]{ display:none; }
+
+  .home-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    grid-auto-rows:minmax(120px,1fr);
+    gap:22px;
+    flex:1;
+  }
+
+  .tile-btn{
+    border-radius:26px;
+    border:3px solid var(--gold);
+    background: radial-gradient(circle at top,#26252e 0,#15151c 45%,#09090c 100%);
+    color:var(--gold);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    font-size:1.1rem;
+    padding:6px 10px;
+    cursor:pointer;
+    transition:
+      transform 80ms ease,
+      box-shadow 120ms ease,
+      border-color 120ms ease,
+      background 120ms ease;
+  }
+  .tile-btn:hover{
+    border-color:#ffe29c;
+    box-shadow:0 0 0 2px rgba(255,226,156,0.4);
+  }
+  .tile-btn:active{
+    transform:scale(0.97);
+  }
+  .tile-main{ font-size:1.4rem; }
+  .tile-sub{ font-size:1.05rem; margin-top:4px; }
+  .tile-icon{ font-size:1.8rem; margin-bottom:4px; }
+
+  .panel-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:12px;
+  }
+  .panel-body{
+    flex:1;
+    min-height:0;
+    overflow-y:auto;
+    padding-right:2px;
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+  }
+
+  .back-btn{
+    border-radius:999px;
+    border:2px solid rgba(215,178,94,0.8);
+    background:transparent;
+    padding:8px 14px;
+    font-size:0.95rem;
+    color:var(--gold);
+    cursor:pointer;
+    min-height:auto;
   }
 
   .card{
-    border: var(--border);
-    border-radius: var(--radius);
-    padding: var(--pad);
-    background: var(--surface);
-    box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+    border:2px solid rgba(215,178,94,0.85);
+    border-radius:18px;
+    padding:16px 18px;
+    background:var(--surface);
+    box-shadow:0 6px 18px rgba(0,0,0,0.35);
   }
 
   .row{
     display:flex;
-    flex-wrap: wrap;
-    gap: var(--gap);
+    flex-wrap:wrap;
+    gap:12px;
     align-items:center;
   }
 
-  label{
-    font-size: 0.9rem;
-    color: var(--muted);
+  .two-col{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:var(--gap);
+  }
+  @media (min-width:860px){
+    .two-col{ grid-template-columns:1fr 1fr; }
   }
 
-  input[type="text"], input[type="password"], input[type="number"], select{
-    width: 100%;
-    border: 2px solid rgba(215,178,94,0.6);
-    border-radius: 12px;
-    padding: 12px 14px;
-    font-size: 1rem;
-    background: var(--surface-2);
-    color: var(--text);
-    outline: none;
+  label{
+    font-size:0.9rem;
+    color:var(--muted);
   }
-  input[type="text"]:focus, input[type="password"]:focus, input[type="number"]:focus, select:focus{
-    box-shadow: var(--accent-glow);
+
+  input[type="text"],input[type="password"],input[type="number"],select{
+    width:100%;
+    border:2px solid rgba(215,178,94,0.6);
+    border-radius:12px;
+    padding:10px 12px;
+    font-size:0.95rem;
+    background:var(--surface-2);
+    color:var(--text);
+    outline:none;
+  }
+  input[type="text"]:focus,
+  input[type="password"]:focus,
+  input[type="number"]:focus,
+  select:focus{
+    box-shadow:var(--accent-glow);
   }
 
   button{
-    border: 2px solid rgba(215,178,94,0.75);
-    border-radius: 14px;
-    padding: 14px 16px;
-    font-size: 1rem;
-    background: var(--soft);
-    color: var(--text);
+    border:2px solid rgba(215,178,94,0.8);
+    border-radius:14px;
+    padding:10px 14px;
+    font-size:0.95rem;
+    background:var(--surface-2);
+    color:var(--text);
     cursor:pointer;
-    min-height: 52px;
-    transition: transform 80ms ease, border-color 120ms ease, background 120ms ease, box-shadow 120ms ease;
+    min-height:44px;
+    transition:transform 80ms ease, border-color 120ms ease, background 120ms ease, box-shadow 120ms ease;
   }
-  button:hover{ border-color: var(--gold); }
-  button:active{ transform: scale(0.985); }
-
-  button.primary{
-    background: linear-gradient(135deg, rgba(215,178,94,0.18), rgba(215,178,94,0.06));
-    border-color: var(--gold);
-    font-weight: 700;
-  }
-  button.small{
-    padding: 10px 12px;
-    min-height: 46px;
-    font-size: 0.95rem;
-  }
-  button.tiny{
-    padding: 8px 10px;
-    min-height: 40px;
-    font-size: 0.9rem;
-  }
+  button:hover{ border-color:var(--gold); }
+  button:active{ transform:scale(0.985); }
   button[disabled]{ opacity:0.45; cursor:not-allowed; }
 
+  button.primary{
+    background:linear-gradient(135deg,rgba(215,178,94,0.18),rgba(215,178,94,0.06));
+    font-weight:700;
+  }
+  button.small{
+    padding:6px 10px;
+    min-height:34px;
+    font-size:0.85rem;
+  }
+
   .status{
-    padding: 10px 0 0 0;
-    font-size: 0.95rem;
-    color: var(--muted);
+    margin-top:6px;
+    font-size:0.9rem;
+    color:var(--muted);
   }
   .hint{
-    font-size: 0.85rem;
-    color: var(--muted);
+    font-size:0.85rem;
+    color:var(--muted);
   }
 
   .grid{
     display:grid;
-    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-    gap: var(--gap);
+    grid-template-columns:repeat(auto-fill,minmax(210px,1fr));
+    gap:12px;
+  }
+  .fav-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+    gap:10px;
+  }
+  .live-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+    gap:var(--gap);
   }
 
   .scene-btn{
-    width: 100%;
+    width:100%;
     text-align:center;
-    font-weight: 600;
-  }
-
-  .head-row{
-    display:flex;
-    justify-content: space-between;
-    align-items:center;
-    gap: 10px;
-  }
-
-  .star{
-    font-size: 1.2rem;
-    line-height: 1;
-    padding: 6px 10px;
-    min-height: 40px;
-  }
-
-  .fav-panel{
-    margin: 10px 0 18px 0;
-  }
-
-  .fav-grid{
-    display:grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 10px;
-  }
-
-  .mixer-item .name{
-    font-weight: 700;
-    margin-bottom: 6px;
-    word-break: break-word;
-  }
-
-  input[type="range"]{
-    width: 100%;
-    height: 40px;
+    font-weight:600;
   }
 
   .meter{
-    width: 100%;
-    height: 14px;
-    border: 2px solid rgba(215,178,94,0.6);
-    border-radius: 999px;
-    overflow: hidden;
-    background: var(--surface-2);
-    margin: 8px 0 10px 0;
+    width:100%;
+    height:14px;
+    border:2px solid rgba(215,178,94,0.6);
+    border-radius:999px;
+    overflow:hidden;
+    background:var(--surface-2);
+    margin:8px 0 10px;
   }
   .meter-bar{
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, var(--gold-2), var(--gold));
-    transition: width 80ms linear;
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,var(--gold-soft),var(--gold));
+    transition:width 80ms linear;
+  }
+
+  .mixer-item .name{
+    font-weight:700;
+    margin-bottom:6px;
+  }
+
+  input[type="range"]{
+    width:100%;
+    height:40px;
   }
 
   details.group{
-    border: var(--border);
-    border-radius: var(--radius);
-    background: var(--surface);
-    padding: 0;
-    margin: 0 0 14px 0;
+    border:2px solid rgba(215,178,94,0.8);
+    border-radius:18px;
+    background:var(--surface);
+    padding:0;
   }
   details.group > summary{
-    list-style: none;
-    cursor: pointer;
-    padding: var(--pad);
-    font-weight: 700;
-    background: linear-gradient(135deg, rgba(215,178,94,0.14), rgba(215,178,94,0.04));
-    border-radius: calc(var(--radius) - 2px);
-    color: var(--text);
+    list-style:none;
+    cursor:pointer;
+    padding:14px 16px;
+    font-weight:700;
+    background:linear-gradient(135deg,rgba(215,178,94,0.14),rgba(215,178,94,0.04));
+    border-radius:16px;
   }
-
   details.group[open] > summary{
-    border-bottom: var(--border);
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
+    border-bottom:2px solid rgba(215,178,94,0.8);
+    border-bottom-left-radius:0;
+    border-bottom-right-radius:0;
   }
-
-  .group-body{ padding: var(--pad); }
-
-  .two-col{
-    display:grid;
-    grid-template-columns: 1fr;
-    gap: var(--gap);
-  }
-  @media (min-width: 860px){
-    .two-col{ grid-template-columns: 1fr 1fr; }
-  }
-
-  .pill-row{
-    display:flex;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-
-  .section-divider{
-    height: 1px;
-    background: rgba(215,178,94,0.35);
-    margin: 18px 0;
-  }
-
-  .quick-nav{
-    position: sticky;
-    top: 0;
-    z-index: 60;
-    margin: 14px 0 14px 0;
-    padding: 12px;
-    background: var(--surface);
-  }
-  .quick-nav .pill-row{ gap: 12px; }
-  .quick-nav button{ min-width: 140px; }
-  .quick-nav-label{ font-weight: 700; margin-right: 8px; color: var(--muted); }
-  .quick-nav button span[aria-hidden="true"]{ margin-right: 8px; }
-
-  .filter-card{
-    margin: 0 0 14px 0;
+  .group-body{
+    padding:14px 16px 16px;
   }
 
   .checkbox-row{
     display:flex;
-    flex-wrap: wrap;
-    gap: 10px 16px;
+    flex-wrap:wrap;
+    gap:10px 16px;
   }
   .checkbox{
     display:flex;
     align-items:center;
-    gap: 8px;
-    padding: 6px 8px;
-    border-radius: 10px;
-    background: var(--surface-2);
-    border: 1px solid rgba(215,178,94,0.25);
+    gap:8px;
+    padding:6px 8px;
+    border-radius:10px;
+    background:var(--surface-2);
+    border:1px solid rgba(215,178,94,0.25);
+    font-size:0.85rem;
   }
   .checkbox input{
-    width: 20px;
-    height: 20px;
+    width:20px;
+    height:20px;
   }
 
   .badge{
     display:inline-block;
-    padding: 2px 8px;
-    border-radius: 999px;
-    border: 1px solid rgba(215,178,94,0.5);
-    font-size: 0.78rem;
-    color: var(--muted);
-    margin-left: 6px;
+    padding:2px 8px;
+    border-radius:999px;
+    border:1px solid rgba(215,178,94,0.5);
+    font-size:0.78rem;
+    color:var(--muted);
+    margin-left:6px;
   }
 
-  .live-grid{
-    display:grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: var(--gap);
+  /* HYTE Y70 specific tweaks (via layout profile) */
+  body[data-layout="y70"]{
+    --pad:12px;
+    --radius:18px;
+    --font:16px;
+    --gap:12px;
   }
+  body[data-layout="y70"] .board{
+    padding:18px 18px 16px;
+    border-radius:26px;
+  }
+  body[data-layout="y70"] .board-title{
+    font-size:2.1rem;
+    letter-spacing:0.22em;
+  }
+  body[data-layout="y70"] .home-grid{
+    grid-auto-rows:110px;
+    gap:16px;
+  }
+  body[data-layout="y70"] .tile-btn{
+    border-width:2px;
+    border-radius:20px;
+    font-size:1rem;
+  }
+  body[data-layout="y70"] .tile-main{ font-size:1.25rem; }
 </style>
 </head>
 <body>
+<div id="top" style="position:absolute;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none;"></div>
 
-<div id="top"></div>
-<h1>OBS Touch Control</h1>
-
-<div class="card">
-  <div class="row">
-    <div style="min-width:180px; flex: 2 1 260px;">
-      <label>Host</label>
-      <input id="host" type="text" value="127.0.0.1" />
-    </div>
-    <div style="max-width:140px; flex: 1 1 120px;">
-      <label>Port</label>
-      <input id="port" type="text" value="4455" />
-    </div>
-    <div style="min-width:220px; flex: 3 1 280px;">
-      <label>Password</label>
-      <input id="password" type="password" placeholder="OBS WebSocket password" />
-    </div>
-    <div style="max-width:170px; flex: 1 1 140px;">
-      <label>&nbsp;</label>
-      <button id="connectBtn" class="primary">Connect</button>
+<div class="board">
+  <div class="board-header">
+    <div class="board-title">TOUCH CONTROL DOCK</div>
+    <div class="board-conn">
+      <span class="conn-label">Status</span>
+      <span id="connStatusHeader" class="conn-pill">Not connected.</span>
     </div>
   </div>
 
-  <div id="connStatus" class="status">Not connected.</div>
-  <div class="hint">Tip: If file:// docks act weird, serve this folder via localhost.</div>
+  <!-- Home view -->
+  <section id="view-home" class="view">
+    <div class="home-grid">
+      <button class="tile-btn" data-view-target="view-scenes">
+        <div class="tile-main">Scene</div>
+      </button>
+      <button class="tile-btn" data-view-target="view-live">
+        <div class="tile-main">Start</div>
+        <div class="tile-sub">Record / Stream</div>
+      </button>
+      <button class="tile-btn" data-view-target="view-mic">
+        <div class="tile-main">Mic</div>
+      </button>
+      <button class="tile-btn" data-view-target="view-audio">
+        <div class="tile-main">Audio</div>
+      </button>
+      <button class="tile-btn" data-view-target="view-settings">
+        <div class="tile-main">Settings</div>
+      </button>
+      <button class="tile-btn" data-view-target="view-virtual">
+        <div class="tile-main">Virtual</div>
+        <div class="tile-sub">Cam</div>
+      </button>
+      <button class="tile-btn" data-view-target="view-exit">
+        <div class="tile-main">Exit</div>
+      </button>
+      <button class="tile-btn" data-view-target="view-home">
+        <div class="tile-main">Home</div>
+      </button>
+    </div>
+  </section>
 
-  <div class="section-divider"></div>
-
-  <div class="two-col">
-    <div>
-      <h3>Scene Collections</h3>
-      <div class="row">
-        <select id="sceneCollectionSelect"></select>
-        <button id="refreshCollectionsBtn" class="small">Refresh</button>
+  <!-- Scenes / Studio panel -->
+  <section id="view-scenes" class="view" hidden>
+    <div class="panel-header">
+      <button class="back-btn" data-view-back>&larr; Home</button>
+      <h2>Scenes &amp; Studio</h2>
+    </div>
+    <div class="panel-body">
+      <div class="card">
+        <h3>Program Scenes</h3>
+        <div id="scenesQuick" class="grid"></div>
       </div>
-      <div class="hint">Switching collections can briefly reset lists.</div>
-    </div>
-    <div>
-      <h3>Profiles</h3>
-      <div class="row">
-        <select id="profileSelect"></select>
-        <button id="refreshProfilesBtn" class="small">Refresh</button>
+
+      <div class="two-col">
+        <div class="card">
+          <h3>Favorite Scenes <span class="badge"><span id="favScenesCount">0</span> pinned</span></h3>
+          <div id="favScenesGrid" class="fav-grid"></div>
+          <div class="hint">Tap ★ on a scene card to add/remove favorites.</div>
+        </div>
+
+        <div class="card">
+          <div class="row" style="justify-content:space-between;align-items:center;">
+            <h3 style="margin-bottom:6px;">Studio Mode</h3>
+            <button id="studioToggleBtn" class="small">Enable Studio Mode</button>
+          </div>
+          <div class="status" id="studioStatus">Studio Mode is disabled.</div>
+
+          <div class="row" style="margin-top:14px;">
+            <div style="flex:1 1 0;min-width:220px;">
+              <h3>Preview</h3>
+              <div id="previewScenes" class="grid"></div>
+            </div>
+            <div style="flex:1 1 0;min-width:220px;">
+              <h3>Program</h3>
+              <div id="programScenes" class="grid"></div>
+            </div>
+          </div>
+
+          <div class="row" style="margin-top:14px;">
+            <button id="takeBtn" class="primary">Take</button>
+          </div>
+        </div>
       </div>
-      <div class="hint">Profiles affect output/stream settings.</div>
-    </div>
-  </div>
-</div>
 
-<div class="card quick-nav">
-  <div class="row" style="align-items:center;">
-    <span class="quick-nav-label">Quick Jump</span>
-    <div class="pill-row">
-      <button class="small" data-jump="top"><span aria-hidden="true">⬆️</span> Top</button>
-      <button class="small" data-jump="favorites-section"><span aria-hidden="true">⭐</span> Favs</button>
-      <button class="small" data-jump="live-section"><span aria-hidden="true">🔴</span> Live</button>
-      <button class="small" data-jump="studio-section"><span aria-hidden="true">🎬</span> Studio</button>
-      <button class="small" data-jump="scenes-section"><span aria-hidden="true">🗂️</span> Scenes</button>
-      <button class="small" data-jump="transitions-section"><span aria-hidden="true">✨</span> Transitions</button>
-      <button class="small" data-jump="audio-section"><span aria-hidden="true">🎚️</span> Audio</button>
-    </div>
-  </div>
-  <div class="hint" style="margin-top:6px;">Tap a button to jump to that section.</div>
-</div>
-
-<h2 id="favorites-section">Favorites</h2>
-<div id="favoritesPanel" class="card fav-panel">
-  <div>
-    <div class="head-row">
-      <h3 style="margin:0;">Favorite Scenes</h3>
-      <span id="favScenesCount" class="badge">0</span>
-    </div>
-    <div id="favScenesGrid" class="fav-grid" style="margin-top:10px;"></div>
-  </div>
-
-  <div class="section-divider"></div>
-
-  <div>
-    <div class="head-row">
-      <h3 style="margin:0;">Favorite Audio</h3>
-      <span id="favInputsCount" class="badge">0</span>
-    </div>
-    <div id="favInputsGrid" class="fav-grid" style="margin-top:10px;"></div>
-  </div>
-
-  <div class="hint" style="margin-top:10px;">Tap ☆ on any scene or audio card to add/remove favorites.</div>
-</div>
-
-<h2 id="live-section">Live Controls</h2>
-<div class="card">
-  <div class="live-grid">
-    <div class="card">
-      <div class="head-row">
-        <h3 style="margin:0;">Streaming</h3>
-        <span id="streamBadge" class="badge">Unknown</span>
+      <div class="card">
+        <div class="row" style="align-items:flex-end;">
+          <div style="flex:2 1 260px;min-width:220px;">
+            <label>Default Transition</label>
+            <select id="transitionSelect"></select>
+          </div>
+          <div style="flex:1 1 140px;min-width:150px;">
+            <label>Duration (ms)</label>
+            <input id="transitionDuration" type="number" min="50" step="50" />
+          </div>
+          <div style="flex:0 0 auto;display:flex;gap:8px;">
+            <button id="applyTransitionBtn" class="small">Apply</button>
+            <button id="triggerTransitionBtn" class="small primary">Cut / Transition</button>
+          </div>
+        </div>
+        <div class="hint" style="margin-top:10px;">Quick transitions</div>
+        <div id="transitionButtons" class="row" style="margin-top:6px;flex-wrap:wrap;"></div>
       </div>
-      <div class="row" style="margin-top:10px;">
-        <button id="streamToggleBtn" class="primary">Start Stream</button>
+    </div>
+  </section>
+
+  <!-- Live panel -->
+  <section id="view-live" class="view" hidden>
+    <div class="panel-header">
+      <button class="back-btn" data-view-back>&larr; Home</button>
+      <h2>Record &amp; Stream</h2>
+    </div>
+    <div class="panel-body">
+      <div class="live-grid">
+        <div class="card">
+          <h3>Recording <span id="recordBadge" class="badge">Idle</span></h3>
+          <div class="status" id="recordStatus">Not recording.</div>
+          <div class="row" style="margin-top:12px;">
+            <button id="recordToggleBtn" class="primary">Start Recording</button>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Streaming <span id="streamBadge" class="badge">Idle</span></h3>
+          <div class="status" id="streamStatus">Not streaming.</div>
+          <div class="row" style="margin-top:12px;">
+            <button id="streamToggleBtn" class="primary">Start Streaming</button>
+          </div>
+        </div>
       </div>
-      <div id="streamStatus" class="hint" style="margin-top:6px;"></div>
     </div>
+  </section>
 
-    <div class="card">
-      <div class="head-row">
-        <h3 style="margin:0;">Recording</h3>
-        <span id="recordBadge" class="badge">Unknown</span>
+  <!-- Mic / Favorites audio panel -->
+  <section id="view-mic" class="view" hidden>
+    <div class="panel-header">
+      <button class="back-btn" data-view-back>&larr; Home</button>
+      <h2>Mic &amp; Favorite Audio</h2>
+    </div>
+    <div class="panel-body">
+      <div class="card">
+        <h3>Favorite Audio <span class="badge"><span id="favInputsCount">0</span> pinned</span></h3>
+        <div id="favInputsGrid" class="fav-grid"></div>
+        <div class="hint">Tap ★ on any audio source to add/remove favorites.</div>
       </div>
-      <div class="row" style="margin-top:10px;">
-        <button id="recordToggleBtn" class="primary">Start Record</button>
+    </div>
+  </section>
+
+  <!-- Audio mixer panel -->
+  <section id="view-audio" class="view" hidden>
+    <div class="panel-header">
+      <button class="back-btn" data-view-back>&larr; Home</button>
+      <h2>Audio Mixer</h2>
+    </div>
+    <div class="panel-body">
+      <div class="card">
+        <h3>Filters</h3>
+        <div id="audioFiltersHost"></div>
       </div>
-      <div id="recordStatus" class="hint" style="margin-top:6px;"></div>
+
+      <div class="card">
+        <h3>Inputs</h3>
+        <div id="mixerGroups"></div>
+      </div>
     </div>
-  </div>
+  </section>
+
+  <!-- Settings panel -->
+  <section id="view-settings" class="view" hidden>
+    <div class="panel-header">
+      <button class="back-btn" data-view-back>&larr; Home</button>
+      <h2>Settings</h2>
+    </div>
+    <div class="panel-body">
+      <div class="card">
+        <h3>Connection</h3>
+        <div class="row">
+          <div style="min-width:180px; flex:2 1 260px;">
+            <label>Host</label>
+            <input id="host" type="text" value="127.0.0.1" />
+          </div>
+          <div style="max-width:140px; flex:1 1 120px;">
+            <label>Port</label>
+            <input id="port" type="text" value="4455" />
+          </div>
+          <div style="min-width:220px; flex:3 1 260px;">
+            <label>Password</label>
+            <input id="password" type="password" placeholder="WebSocket password" />
+          </div>
+          <div style="max-width:180px; flex:1 1 160px;">
+            <label>Layout</label>
+            <select id="layoutSelect">
+              <option value="auto">Auto</option>
+              <option value="y70">Y70 Wide</option>
+              <option value="default">Default</option>
+            </select>
+          </div>
+          <div style="max-width:170px; flex:1 1 140px;">
+            <label>&nbsp;</label>
+            <button id="connectBtn" class="primary">Connect</button>
+          </div>
+        </div>
+        <div class="status" id="connStatus">Not connected.</div>
+      </div>
+
+      <div class="card">
+        <div class="two-col">
+          <div>
+            <h3>Scene Collections</h3>
+            <div class="row">
+              <select id="sceneCollectionSelect"></select>
+              <button id="refreshCollectionsBtn" class="small">Refresh</button>
+            </div>
+            <div class="hint">Switching collections can briefly reset lists.</div>
+          </div>
+          <div>
+            <h3>Profiles</h3>
+            <div class="row">
+              <select id="profileSelect"></select>
+              <button id="refreshProfilesBtn" class="small">Refresh</button>
+            </div>
+            <div class="hint">Profiles affect output/stream settings.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Virtual Cam placeholder -->
+  <section id="view-virtual" class="view" hidden>
+    <div class="panel-header">
+      <button class="back-btn" data-view-back>&larr; Home</button>
+      <h2>Virtual Camera</h2>
+    </div>
+    <div class="panel-body">
+      <div class="card">
+        <div class="hint">
+          This UI focuses on scenes, audio and live controls. Use your main application window to start or stop the virtual camera for now.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Exit placeholder -->
+  <section id="view-exit" class="view" hidden>
+    <div class="panel-header">
+      <button class="back-btn" data-view-back>&larr; Home</button>
+      <h2>Exit</h2>
+    </div>
+    <div class="panel-body">
+      <div class="card">
+        <div class="hint">
+          This panel is just a reminder tile so you can reserve a corner of the touch panel for quickly closing or hiding docks/windows on your desktop.
+        </div>
+      </div>
+    </div>
+  </section>
+
 </div>
-
-<h2 id="studio-section">Studio Mode</h2>
-<div class="card">
-  <div class="row">
-    <div style="max-width:240px;">
-      <button id="studioToggleBtn" class="primary">Enable Studio Mode</button>
-    </div>
-    <div style="max-width:200px;">
-      <button id="takeBtn" class="primary" disabled>Take</button>
-    </div>
-    <div id="studioStatus" class="status" style="padding-top:0;">Unknown.</div>
-  </div>
-
-  <div class="two-col">
-    <div>
-      <h3>Preview</h3>
-      <div id="previewScenes" class="grid"></div>
-    </div>
-    <div>
-      <h3>Program</h3>
-      <div id="programScenes" class="grid"></div>
-    </div>
-  </div>
-  <div class="hint">Preview controls appear only when Studio Mode is enabled.</div>
-</div>
-
-<h2 id="scenes-section">Scenes (Quick)</h2>
-<div id="scenesQuick" class="grid"></div>
-
-<h2 id="transitions-section">Transitions</h2>
-<div class="card">
-  <div class="row">
-    <div style="min-width:240px;">
-      <label>Current Transition</label>
-      <select id="transitionSelect"></select>
-    </div>
-    <div style="max-width:160px;">
-      <label>Duration (ms)</label>
-      <input id="transitionDuration" type="number" min="0" step="50" value="300" />
-    </div>
-    <div style="max-width:160px;">
-      <label>&nbsp;</label>
-      <button id="applyTransitionBtn" class="small">Apply</button>
-    </div>
-    <div style="max-width:160px;">
-      <label>&nbsp;</label>
-      <button id="triggerTransitionBtn" class="small">Trigger</button>
-    </div>
-  </div>
-  <div id="transitionButtons" class="pill-row" style="margin-top:12px;"></div>
-  <div class="hint">Trigger is mainly for Studio Mode transitions.</div>
-</div>
-
-<h2 id="audio-section">Audio / Inputs</h2>
-<div id="audioFiltersHost"></div>
-<div id="mixerGroups"></div>
 
 <script>
 (() => {
@@ -470,6 +652,7 @@
   const passwordEl = document.getElementById('password');
   const connectBtn = document.getElementById('connectBtn');
   const connStatus = document.getElementById('connStatus');
+  const layoutSelect = document.getElementById('layoutSelect');
 
   const sceneCollectionSelect = document.getElementById('sceneCollectionSelect');
   const profileSelect = document.getElementById('profileSelect');
@@ -504,6 +687,50 @@
   const recordBadge = document.getElementById('recordBadge');
   const streamStatus = document.getElementById('streamStatus');
   const recordStatus = document.getElementById('recordStatus');
+
+  // ---------- Layout Profiles ----------
+  const LS_LAYOUT = 'touch_control_layout';
+
+  function applyLayoutProfile(){
+    const params = new URLSearchParams(location.search);
+    const forced = params.get('layout'); // e.g. ?layout=y70
+
+    if (forced){
+      document.body.dataset.layout = forced;
+      localStorage.setItem(LS_LAYOUT, forced);
+      if (layoutSelect) layoutSelect.value = forced;
+      return;
+    }
+
+    const saved = localStorage.getItem(LS_LAYOUT) || 'auto';
+    if (layoutSelect) layoutSelect.value = saved;
+
+    if (saved && saved !== 'auto'){
+      document.body.dataset.layout = saved;
+      return;
+    }
+
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const aspect = w / Math.max(1, h);
+
+    if (h <= 800 && aspect >= 3.0){
+      document.body.dataset.layout = 'y70';
+    }else{
+      document.body.dataset.layout = 'default';
+    }
+  }
+
+  if (layoutSelect){
+    layoutSelect.addEventListener('change', () => {
+      const v = layoutSelect.value;
+      localStorage.setItem(LS_LAYOUT, v);
+      applyLayoutProfile();
+    });
+  }
+
+  applyLayoutProfile();
+  window.addEventListener('resize', applyLayoutProfile);
 
   // ---------- Quick Jump ----------
   function jumpTo(id){
@@ -705,11 +932,11 @@
 
   connectBtn.onclick = connect;
 
-  // ---------- Favorites storage ----------
-  const LS_FAV_SCENES = 'obs_touch_fav_scenes';
-  const LS_FAV_INPUTS = 'obs_touch_fav_inputs';
-  const LS_GROUP_FILTER = 'obs_touch_group_filter';
-  const LS_GROUP_FILTER_ENABLED = 'obs_touch_group_filter_enabled';
+  // ---------- Storage ----------
+  const LS_FAV_SCENES = 'touch_control_fav_scenes';
+  const LS_FAV_INPUTS = 'touch_control_fav_inputs';
+  const LS_GROUP_FILTER = 'touch_control_group_filter';
+  const LS_GROUP_FILTER_ENABLED = 'touch_control_group_filter_enabled';
 
   function getFavScenes(){
     try{ return JSON.parse(localStorage.getItem(LS_FAV_SCENES) || '[]'); }
@@ -740,6 +967,20 @@
     setFavInputs([...favs]);
     renderFavoriteInputs();
     loadAudio();
+  }
+
+  function getGroupFilterEnabled(){
+    return localStorage.getItem(LS_GROUP_FILTER_ENABLED) === 'true';
+  }
+  function setGroupFilterEnabled(val){
+    localStorage.setItem(LS_GROUP_FILTER_ENABLED, val ? 'true' : 'false');
+  }
+  function getSelectedGroups(){
+    try{ return JSON.parse(localStorage.getItem(LS_GROUP_FILTER) || '[]'); }
+    catch{ return []; }
+  }
+  function setSelectedGroups(arr){
+    localStorage.setItem(LS_GROUP_FILTER, JSON.stringify(Array.from(new Set(arr))));
   }
 
   // ---------- Scene Collections / Profiles ----------
@@ -839,7 +1080,6 @@
       reconnecting = !!r.responseData?.outputReconnecting;
       timecode = r.responseData?.outputTimecode;
     }catch{
-      // Fallback for newer unified output APIs (best-effort)
       try{
         const r = await call('GetOutputStatus', { outputName: 'stream' });
         active = !!r.responseData?.outputActive;
@@ -851,7 +1091,6 @@
     streamBadge.textContent = active ? (reconnecting ? 'Reconnecting' : 'Live') : 'Off';
     streamToggleBtn.textContent = active ? 'Stop Stream' : 'Start Stream';
     streamStatus.textContent = timecode ? `Time: ${timecode}` : '';
-    streamToggleBtn.className = 'primary';
     return active;
   }
 
@@ -877,7 +1116,6 @@
     recordBadge.textContent = active ? (paused ? 'Paused' : 'Recording') : 'Off';
     recordToggleBtn.textContent = active ? 'Stop Record' : 'Start Record';
     recordStatus.textContent = timecode ? `Time: ${timecode}` : '';
-    recordToggleBtn.className = 'primary';
     return active;
   }
 
@@ -931,7 +1169,6 @@
 
     head.appendChild(btn);
     head.appendChild(starBtn);
-
     card.appendChild(head);
     return card;
   }
@@ -945,12 +1182,10 @@
     }catch{}
 
     const favSet = new Set(getFavScenes());
-
     for (const sc of scenes){
       const name = sc.sceneName;
       scenesQuickEl.appendChild(makeSceneCard(name, favSet.has(name)));
     }
-
     renderFavoriteScenes();
   }
 
@@ -1043,7 +1278,6 @@
     for (const sc of scenes){
       const name = sc.sceneName;
 
-      // Preview card
       const pWrap = document.createElement('div');
       pWrap.className = 'card';
       const pHead = document.createElement('div');
@@ -1067,7 +1301,6 @@
       pWrap.appendChild(pHead);
       previewScenesEl.appendChild(pWrap);
 
-      // Program card
       const prWrap = document.createElement('div');
       prWrap.className = 'card';
       const prHead = document.createElement('div');
@@ -1178,20 +1411,6 @@
   };
 
   // ---------- Audio grouping + filter ----------
-  function getGroupFilterEnabled(){
-    return localStorage.getItem(LS_GROUP_FILTER_ENABLED) === 'true';
-  }
-  function setGroupFilterEnabled(val){
-    localStorage.setItem(LS_GROUP_FILTER_ENABLED, val ? 'true' : 'false');
-  }
-  function getSelectedGroups(){
-    try{ return JSON.parse(localStorage.getItem(LS_GROUP_FILTER) || '[]'); }
-    catch{ return []; }
-  }
-  function setSelectedGroups(arr){
-    localStorage.setItem(LS_GROUP_FILTER, JSON.stringify(Array.from(new Set(arr))));
-  }
-
   async function getAudioCapableInputs(){
     const resp = await call('GetInputList');
     const inputs = resp.responseData?.inputs ?? [];
@@ -1286,7 +1505,6 @@
 
   function filterAssignments(assignments){
     if (!getGroupFilterEnabled()) return assignments;
-
     const selected = new Set(getSelectedGroups());
     if (selected.size === 0) return assignments;
 
@@ -1336,12 +1554,10 @@
       setGroupFilterEnabled(!enabled);
       loadAudio();
     };
-
     right.appendChild(toggleBtn);
 
     head.appendChild(left);
     head.appendChild(right);
-
     card.appendChild(head);
 
     if (allGroups.length === 0){
@@ -1408,7 +1624,6 @@
 
     card.appendChild(boxRow);
     card.appendChild(tools);
-
     audioFiltersHost.appendChild(card);
   }
 
@@ -1712,6 +1927,54 @@
     renderFavoriteScenes();
   }
 
+})();
+</script>
+<script>
+(() => {
+  const views = Array.from(document.querySelectorAll('.view'));
+  let currentId = 'view-home';
+
+  function showView(id){
+    currentId = id;
+    views.forEach(v => {
+      if (v.id === id) {
+        v.removeAttribute('hidden');
+      } else {
+        v.setAttribute('hidden','');
+      }
+    });
+  }
+
+  // Tile buttons
+  document.querySelectorAll('.tile-btn[data-view-target]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.getAttribute('data-view-target');
+      if (target) showView(target);
+    });
+  });
+
+  // Back buttons
+  document.querySelectorAll('[data-view-back]').forEach(btn => {
+    btn.addEventListener('click', () => showView('view-home'));
+  });
+
+  // expose helper in case we ever need it from console
+  window.touchDockShowView = showView;
+
+  // initial
+  showView('view-home');
+})();
+</script>
+<script>
+// Mirror connection status text into the header pill
+(() => {
+  const main = document.getElementById('connStatus');
+  const pill = document.getElementById('connStatusHeader');
+  if (!main || !pill) return;
+  const sync = () => { pill.textContent = main.textContent || ' '; };
+  const obs = new MutationObserver(sync);
+  obs.observe(main, { childList:true, subtree:true, characterData:true });
+  sync();
 })();
 </script>
 
