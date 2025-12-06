@@ -1,3 +1,7 @@
+Experimental Branch! 
+
+Added additional Design ideas which are not fully working. Feel free to take these ideas and make them your own. 
+
 # Touch Control Dock - friendly UI
 
 A touch-first control surface intended for use with OBS via **obs-websocket v5**.
