@@ -1,0 +1,1719 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>OBS Touch Control</title>
+<style>
+  :root{
+    --pad: 18px;
+    --radius: 18px;
+    --font: 18px;
+    --gap: 14px;
+
+    /* Black & gold theme */
+    --bg: #0b0b0e;
+    --surface: #111217;
+    --surface-2: #161821;
+    --text: #f5f5f7;
+    --muted: #b9bcc7;
+    --gold: #d7b25e;
+    --gold-2: #b8932f;
+
+    --border: 2px solid var(--gold);
+    --soft: var(--surface-2);
+    --accent-glow: 0 0 0 2px rgba(215,178,94,0.25);
+  }
+
+  *{box-sizing:border-box;}
+
+  body{
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    margin: 0;
+    padding: var(--pad);
+    font-size: var(--font);
+    background: var(--bg);
+    color: var(--text);
+  }
+
+  h1{
+    margin: 0 0 10px 0;
+    font-size: 1.6rem;
+    color: var(--gold);
+    letter-spacing: 0.3px;
+  }
+  h2{
+    margin: 26px 0 10px 0;
+    font-size: 1.25rem;
+    color: var(--gold);
+  }
+  h3{
+    margin: 14px 0 8px 0;
+    font-size: 1.05rem;
+    color: var(--text);
+  }
+
+  .card{
+    border: var(--border);
+    border-radius: var(--radius);
+    padding: var(--pad);
+    background: var(--surface);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+  }
+
+  .row{
+    display:flex;
+    flex-wrap: wrap;
+    gap: var(--gap);
+    align-items:center;
+  }
+
+  label{
+    font-size: 0.9rem;
+    color: var(--muted);
+  }
+
+  input[type="text"], input[type="password"], input[type="number"], select{
+    width: 100%;
+    border: 2px solid rgba(215,178,94,0.6);
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 1rem;
+    background: var(--surface-2);
+    color: var(--text);
+    outline: none;
+  }
+  input[type="text"]:focus, input[type="password"]:focus, input[type="number"]:focus, select:focus{
+    box-shadow: var(--accent-glow);
+  }
+
+  button{
+    border: 2px solid rgba(215,178,94,0.75);
+    border-radius: 14px;
+    padding: 14px 16px;
+    font-size: 1rem;
+    background: var(--soft);
+    color: var(--text);
+    cursor:pointer;
+    min-height: 52px;
+    transition: transform 80ms ease, border-color 120ms ease, background 120ms ease, box-shadow 120ms ease;
+  }
+  button:hover{ border-color: var(--gold); }
+  button:active{ transform: scale(0.985); }
+
+  button.primary{
+    background: linear-gradient(135deg, rgba(215,178,94,0.18), rgba(215,178,94,0.06));
+    border-color: var(--gold);
+    font-weight: 700;
+  }
+  button.small{
+    padding: 10px 12px;
+    min-height: 46px;
+    font-size: 0.95rem;
+  }
+  button.tiny{
+    padding: 8px 10px;
+    min-height: 40px;
+    font-size: 0.9rem;
+  }
+  button[disabled]{ opacity:0.45; cursor:not-allowed; }
+
+  .status{
+    padding: 10px 0 0 0;
+    font-size: 0.95rem;
+    color: var(--muted);
+  }
+  .hint{
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: var(--gap);
+  }
+
+  .scene-btn{
+    width: 100%;
+    text-align:center;
+    font-weight: 600;
+  }
+
+  .head-row{
+    display:flex;
+    justify-content: space-between;
+    align-items:center;
+    gap: 10px;
+  }
+
+  .star{
+    font-size: 1.2rem;
+    line-height: 1;
+    padding: 6px 10px;
+    min-height: 40px;
+  }
+
+  .fav-panel{
+    margin: 10px 0 18px 0;
+  }
+
+  .fav-grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 10px;
+  }
+
+  .mixer-item .name{
+    font-weight: 700;
+    margin-bottom: 6px;
+    word-break: break-word;
+  }
+
+  input[type="range"]{
+    width: 100%;
+    height: 40px;
+  }
+
+  .meter{
+    width: 100%;
+    height: 14px;
+    border: 2px solid rgba(215,178,94,0.6);
+    border-radius: 999px;
+    overflow: hidden;
+    background: var(--surface-2);
+    margin: 8px 0 10px 0;
+  }
+  .meter-bar{
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--gold-2), var(--gold));
+    transition: width 80ms linear;
+  }
+
+  details.group{
+    border: var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    padding: 0;
+    margin: 0 0 14px 0;
+  }
+  details.group > summary{
+    list-style: none;
+    cursor: pointer;
+    padding: var(--pad);
+    font-weight: 700;
+    background: linear-gradient(135deg, rgba(215,178,94,0.14), rgba(215,178,94,0.04));
+    border-radius: calc(var(--radius) - 2px);
+    color: var(--text);
+  }
+
+  details.group[open] > summary{
+    border-bottom: var(--border);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  .group-body{ padding: var(--pad); }
+
+  .two-col{
+    display:grid;
+    grid-template-columns: 1fr;
+    gap: var(--gap);
+  }
+  @media (min-width: 860px){
+    .two-col{ grid-template-columns: 1fr 1fr; }
+  }
+
+  .pill-row{
+    display:flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .section-divider{
+    height: 1px;
+    background: rgba(215,178,94,0.35);
+    margin: 18px 0;
+  }
+
+  .quick-nav{
+    position: sticky;
+    top: 0;
+    z-index: 60;
+    margin: 14px 0 14px 0;
+    padding: 12px;
+    background: var(--surface);
+  }
+  .quick-nav .pill-row{ gap: 12px; }
+  .quick-nav button{ min-width: 140px; }
+  .quick-nav-label{ font-weight: 700; margin-right: 8px; color: var(--muted); }
+  .quick-nav button span[aria-hidden="true"]{ margin-right: 8px; }
+
+  .filter-card{
+    margin: 0 0 14px 0;
+  }
+
+  .checkbox-row{
+    display:flex;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+  }
+  .checkbox{
+    display:flex;
+    align-items:center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 10px;
+    background: var(--surface-2);
+    border: 1px solid rgba(215,178,94,0.25);
+  }
+  .checkbox input{
+    width: 20px;
+    height: 20px;
+  }
+
+  .badge{
+    display:inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(215,178,94,0.5);
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-left: 6px;
+  }
+
+  .live-grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: var(--gap);
+  }
+</style>
+</head>
+<body>
+
+<div id="top"></div>
+<h1>OBS Touch Control</h1>
+
+<div class="card">
+  <div class="row">
+    <div style="min-width:180px; flex: 2 1 260px;">
+      <label>Host</label>
+      <input id="host" type="text" value="127.0.0.1" />
+    </div>
+    <div style="max-width:140px; flex: 1 1 120px;">
+      <label>Port</label>
+      <input id="port" type="text" value="4455" />
+    </div>
+    <div style="min-width:220px; flex: 3 1 280px;">
+      <label>Password</label>
+      <input id="password" type="password" placeholder="OBS WebSocket password" />
+    </div>
+    <div style="max-width:170px; flex: 1 1 140px;">
+      <label>&nbsp;</label>
+      <button id="connectBtn" class="primary">Connect</button>
+    </div>
+  </div>
+
+  <div id="connStatus" class="status">Not connected.</div>
+  <div class="hint">Tip: If file:// docks act weird, serve this folder via localhost.</div>
+
+  <div class="section-divider"></div>
+
+  <div class="two-col">
+    <div>
+      <h3>Scene Collections</h3>
+      <div class="row">
+        <select id="sceneCollectionSelect"></select>
+        <button id="refreshCollectionsBtn" class="small">Refresh</button>
+      </div>
+      <div class="hint">Switching collections can briefly reset lists.</div>
+    </div>
+    <div>
+      <h3>Profiles</h3>
+      <div class="row">
+        <select id="profileSelect"></select>
+        <button id="refreshProfilesBtn" class="small">Refresh</button>
+      </div>
+      <div class="hint">Profiles affect output/stream settings.</div>
+    </div>
+  </div>
+</div>
+
+<div class="card quick-nav">
+  <div class="row" style="align-items:center;">
+    <span class="quick-nav-label">Quick Jump</span>
+    <div class="pill-row">
+      <button class="small" data-jump="top"><span aria-hidden="true">⬆️</span> Top</button>
+      <button class="small" data-jump="favorites-section"><span aria-hidden="true">⭐</span> Favs</button>
+      <button class="small" data-jump="live-section"><span aria-hidden="true">🔴</span> Live</button>
+      <button class="small" data-jump="studio-section"><span aria-hidden="true">🎬</span> Studio</button>
+      <button class="small" data-jump="scenes-section"><span aria-hidden="true">🗂️</span> Scenes</button>
+      <button class="small" data-jump="transitions-section"><span aria-hidden="true">✨</span> Transitions</button>
+      <button class="small" data-jump="audio-section"><span aria-hidden="true">🎚️</span> Audio</button>
+    </div>
+  </div>
+  <div class="hint" style="margin-top:6px;">Tap a button to jump to that section.</div>
+</div>
+
+<h2 id="favorites-section">Favorites</h2>
+<div id="favoritesPanel" class="card fav-panel">
+  <div>
+    <div class="head-row">
+      <h3 style="margin:0;">Favorite Scenes</h3>
+      <span id="favScenesCount" class="badge">0</span>
+    </div>
+    <div id="favScenesGrid" class="fav-grid" style="margin-top:10px;"></div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <div>
+    <div class="head-row">
+      <h3 style="margin:0;">Favorite Audio</h3>
+      <span id="favInputsCount" class="badge">0</span>
+    </div>
+    <div id="favInputsGrid" class="fav-grid" style="margin-top:10px;"></div>
+  </div>
+
+  <div class="hint" style="margin-top:10px;">Tap ☆ on any scene or audio card to add/remove favorites.</div>
+</div>
+
+<h2 id="live-section">Live Controls</h2>
+<div class="card">
+  <div class="live-grid">
+    <div class="card">
+      <div class="head-row">
+        <h3 style="margin:0;">Streaming</h3>
+        <span id="streamBadge" class="badge">Unknown</span>
+      </div>
+      <div class="row" style="margin-top:10px;">
+        <button id="streamToggleBtn" class="primary">Start Stream</button>
+      </div>
+      <div id="streamStatus" class="hint" style="margin-top:6px;"></div>
+    </div>
+
+    <div class="card">
+      <div class="head-row">
+        <h3 style="margin:0;">Recording</h3>
+        <span id="recordBadge" class="badge">Unknown</span>
+      </div>
+      <div class="row" style="margin-top:10px;">
+        <button id="recordToggleBtn" class="primary">Start Record</button>
+      </div>
+      <div id="recordStatus" class="hint" style="margin-top:6px;"></div>
+    </div>
+  </div>
+</div>
+
+<h2 id="studio-section">Studio Mode</h2>
+<div class="card">
+  <div class="row">
+    <div style="max-width:240px;">
+      <button id="studioToggleBtn" class="primary">Enable Studio Mode</button>
+    </div>
+    <div style="max-width:200px;">
+      <button id="takeBtn" class="primary" disabled>Take</button>
+    </div>
+    <div id="studioStatus" class="status" style="padding-top:0;">Unknown.</div>
+  </div>
+
+  <div class="two-col">
+    <div>
+      <h3>Preview</h3>
+      <div id="previewScenes" class="grid"></div>
+    </div>
+    <div>
+      <h3>Program</h3>
+      <div id="programScenes" class="grid"></div>
+    </div>
+  </div>
+  <div class="hint">Preview controls appear only when Studio Mode is enabled.</div>
+</div>
+
+<h2 id="scenes-section">Scenes (Quick)</h2>
+<div id="scenesQuick" class="grid"></div>
+
+<h2 id="transitions-section">Transitions</h2>
+<div class="card">
+  <div class="row">
+    <div style="min-width:240px;">
+      <label>Current Transition</label>
+      <select id="transitionSelect"></select>
+    </div>
+    <div style="max-width:160px;">
+      <label>Duration (ms)</label>
+      <input id="transitionDuration" type="number" min="0" step="50" value="300" />
+    </div>
+    <div style="max-width:160px;">
+      <label>&nbsp;</label>
+      <button id="applyTransitionBtn" class="small">Apply</button>
+    </div>
+    <div style="max-width:160px;">
+      <label>&nbsp;</label>
+      <button id="triggerTransitionBtn" class="small">Trigger</button>
+    </div>
+  </div>
+  <div id="transitionButtons" class="pill-row" style="margin-top:12px;"></div>
+  <div class="hint">Trigger is mainly for Studio Mode transitions.</div>
+</div>
+
+<h2 id="audio-section">Audio / Inputs</h2>
+<div id="audioFiltersHost"></div>
+<div id="mixerGroups"></div>
+
+<script>
+(() => {
+  // ---------- Elements ----------
+  const hostEl = document.getElementById('host');
+  const portEl = document.getElementById('port');
+  const passwordEl = document.getElementById('password');
+  const connectBtn = document.getElementById('connectBtn');
+  const connStatus = document.getElementById('connStatus');
+
+  const sceneCollectionSelect = document.getElementById('sceneCollectionSelect');
+  const profileSelect = document.getElementById('profileSelect');
+  const refreshCollectionsBtn = document.getElementById('refreshCollectionsBtn');
+  const refreshProfilesBtn = document.getElementById('refreshProfilesBtn');
+
+  const studioToggleBtn = document.getElementById('studioToggleBtn');
+  const takeBtn = document.getElementById('takeBtn');
+  const studioStatus = document.getElementById('studioStatus');
+  const previewScenesEl = document.getElementById('previewScenes');
+  const programScenesEl = document.getElementById('programScenes');
+
+  const scenesQuickEl = document.getElementById('scenesQuick');
+
+  const transitionSelect = document.getElementById('transitionSelect');
+  const transitionDuration = document.getElementById('transitionDuration');
+  const applyTransitionBtn = document.getElementById('applyTransitionBtn');
+  const triggerTransitionBtn = document.getElementById('triggerTransitionBtn');
+  const transitionButtons = document.getElementById('transitionButtons');
+
+  const audioFiltersHost = document.getElementById('audioFiltersHost');
+  const mixerGroupsEl = document.getElementById('mixerGroups');
+
+  const favScenesGrid = document.getElementById('favScenesGrid');
+  const favInputsGrid = document.getElementById('favInputsGrid');
+  const favScenesCount = document.getElementById('favScenesCount');
+  const favInputsCount = document.getElementById('favInputsCount');
+
+  const streamToggleBtn = document.getElementById('streamToggleBtn');
+  const recordToggleBtn = document.getElementById('recordToggleBtn');
+  const streamBadge = document.getElementById('streamBadge');
+  const recordBadge = document.getElementById('recordBadge');
+  const streamStatus = document.getElementById('streamStatus');
+  const recordStatus = document.getElementById('recordStatus');
+
+  // ---------- Quick Jump ----------
+  function jumpTo(id){
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  function wireQuickJump(){
+    const buttons = document.querySelectorAll('[data-jump]');
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-jump');
+        if (id) jumpTo(id);
+      });
+    });
+  }
+
+  // ---------- WebSocket v5 ----------
+  let ws = null;
+  let identified = false;
+  let reqCounter = 0;
+  const pending = new Map();
+  const meterBars = new Map(); // InputName -> meterBarEl
+
+  function setStatus(txt){ connStatus.textContent = txt; }
+
+  function wsUrl(){
+    const host = hostEl.value.trim() || '127.0.0.1';
+    const port = portEl.value.trim() || '4455';
+    return `ws://${host}:${port}`;
+  }
+
+  function send(op, d){
+    if (!ws || ws.readyState !== 1) return;
+    ws.send(JSON.stringify({ op, d }));
+  }
+
+  function call(requestType, requestData = {}){
+    const requestId = String(++reqCounter);
+    send(6, { requestType, requestId, requestData });
+
+    return new Promise((resolve, reject) => {
+      pending.set(requestId, { resolve, reject });
+      setTimeout(() => {
+        if (pending.has(requestId)) {
+          pending.delete(requestId);
+          reject(new Error(`Timeout calling ${requestType}`));
+        }
+      }, 6000);
+    });
+  }
+
+  async function sha256Base64(str) {
+    const data = new TextEncoder().encode(str);
+    const hash = await crypto.subtle.digest('SHA-256', data);
+    const bytes = Array.from(new Uint8Array(hash));
+    const bin = bytes.map(b => String.fromCharCode(b)).join('');
+    return btoa(bin);
+  }
+
+  async function makeAuth(password, salt, challenge) {
+    const secret = await sha256Base64(password + salt);
+    const auth = await sha256Base64(secret + challenge);
+    return auth;
+  }
+
+  function identify(authentication) {
+    const identifyData = {
+      rpcVersion: 1,
+      eventSubscriptions: 0xFFFFFFFF
+    };
+    if (authentication) identifyData.authentication = authentication;
+    send(1, identifyData);
+  }
+
+  async function handleHello(hello) {
+    const password = passwordEl.value || '';
+    let auth;
+    if (hello.authentication && password) {
+      const { salt, challenge } = hello.authentication;
+      try { auth = await makeAuth(password, salt, challenge); } catch {}
+    }
+    identify(auth);
+  }
+
+  function handleIdentified() {
+    identified = true;
+    setStatus('Connected & identified.');
+    connectBtn.textContent = 'Reconnect';
+    wireQuickJump();
+    initialLoad();
+  }
+
+  function handleRequestResponse(d) {
+    const { requestId, requestStatus, responseData } = d;
+    const entry = pending.get(requestId);
+    if (!entry) return;
+    pending.delete(requestId);
+
+    if (requestStatus?.result) {
+      entry.resolve({ responseData });
+    } else {
+      entry.reject(new Error(requestStatus?.comment ?? 'Request failed'));
+    }
+  }
+
+  function flattenLevels(levels){
+    try{
+      if (!Array.isArray(levels)) return [];
+      if (levels.flat) return levels.flat(3);
+      const out = [];
+      for (const v of levels){
+        if (Array.isArray(v)) out.push(...v);
+        else out.push(v);
+      }
+      return out;
+    }catch{
+      return [];
+    }
+  }
+
+  function handleEvent(eventType, eventData){
+    if (eventType === 'InputVolumeMeters'){
+      const inputs = eventData?.inputs ?? [];
+      for (const input of inputs){
+        const name = input.inputName;
+        const levels = input.inputLevelsMul || input.inputLevels || input.inputLevelsDb;
+        if (!levels) continue;
+
+        let max = 0;
+        const flat = flattenLevels(levels);
+        for (const v of flat){
+          const n = Number(v);
+          if (!isNaN(n)) max = Math.max(max, n);
+        }
+
+        const pct = Math.max(0, Math.min(100, Math.round(max * 100)));
+        const bar = meterBars.get(name);
+        if (bar) bar.style.width = pct + '%';
+      }
+    }
+
+    if (eventType === 'CurrentProgramSceneChanged' ||
+        eventType === 'CurrentPreviewSceneChanged' ||
+        eventType === 'StudioModeStateChanged'){
+      loadStudio();
+      loadScenesQuick();
+      renderFavoriteScenes();
+    }
+
+    if (eventType === 'InputMuteStateChanged' || eventType === 'InputVolumeChanged'){
+      renderFavoriteInputs();
+    }
+
+    if (eventType === 'StreamStateChanged' || eventType === 'RecordStateChanged'){
+      loadLive();
+    }
+  }
+
+  function bindSocket(){
+    ws.onopen = () => setStatus('Socket open, waiting for Hello...');
+    ws.onclose = () => {
+      identified = false;
+      setStatus('Disconnected.');
+      takeBtn.disabled = true;
+      studioStatus.textContent = 'Unknown.';
+      streamBadge.textContent = 'Unknown';
+      recordBadge.textContent = 'Unknown';
+    };
+    ws.onerror = () => setStatus('WebSocket error.');
+
+    ws.onmessage = async (ev) => {
+      let msg;
+      try { msg = JSON.parse(ev.data); } catch { return; }
+
+      if (msg.op === 0) {
+        await handleHello(msg.d || {});
+      } else if (msg.op === 2) {
+        handleIdentified();
+      } else if (msg.op === 5) {
+        const { eventType, eventData } = msg.d || {};
+        if (eventType) handleEvent(eventType, eventData || {});
+      } else if (msg.op === 7) {
+        handleRequestResponse(msg.d || {});
+      }
+    };
+  }
+
+  function connect(){
+    try{ if (ws) ws.close(); } catch {}
+    identified = false;
+    reqCounter = 0;
+    pending.clear();
+
+    setStatus('Connecting...');
+    ws = new WebSocket(wsUrl());
+    bindSocket();
+  }
+
+  connectBtn.onclick = connect;
+
+  // ---------- Favorites storage ----------
+  const LS_FAV_SCENES = 'obs_touch_fav_scenes';
+  const LS_FAV_INPUTS = 'obs_touch_fav_inputs';
+  const LS_GROUP_FILTER = 'obs_touch_group_filter';
+  const LS_GROUP_FILTER_ENABLED = 'obs_touch_group_filter_enabled';
+
+  function getFavScenes(){
+    try{ return JSON.parse(localStorage.getItem(LS_FAV_SCENES) || '[]'); }
+    catch{ return []; }
+  }
+  function setFavScenes(arr){
+    localStorage.setItem(LS_FAV_SCENES, JSON.stringify(Array.from(new Set(arr))));
+  }
+  function toggleFavScene(name){
+    const favs = new Set(getFavScenes());
+    favs.has(name) ? favs.delete(name) : favs.add(name);
+    setFavScenes([...favs]);
+    renderFavoriteScenes();
+    loadScenesQuick();
+    loadStudio();
+  }
+
+  function getFavInputs(){
+    try{ return JSON.parse(localStorage.getItem(LS_FAV_INPUTS) || '[]'); }
+    catch{ return []; }
+  }
+  function setFavInputs(arr){
+    localStorage.setItem(LS_FAV_INPUTS, JSON.stringify(Array.from(new Set(arr))));
+  }
+  function toggleFavInput(name){
+    const favs = new Set(getFavInputs());
+    favs.has(name) ? favs.delete(name) : favs.add(name);
+    setFavInputs([...favs]);
+    renderFavoriteInputs();
+    loadAudio();
+  }
+
+  // ---------- Scene Collections / Profiles ----------
+  async function loadSceneCollections(){
+    sceneCollectionSelect.innerHTML = '';
+    let current = null;
+    let list = [];
+
+    try{
+      const r = await call('GetCurrentSceneCollection');
+      current = r.responseData?.currentSceneCollectionName;
+    }catch{}
+
+    try{
+      const r = await call('GetSceneCollectionList');
+      list = r.responseData?.sceneCollections ?? r.responseData?.sceneCollectionNames ?? [];
+    }catch{}
+
+    const names = [];
+    for (const x of list){
+      if (typeof x === 'string') names.push(x);
+      else if (x?.sceneCollectionName) names.push(x.sceneCollectionName);
+      else if (x?.name) names.push(x.name);
+    }
+
+    for (const name of names){
+      const opt = document.createElement('option');
+      opt.value = name;
+      opt.textContent = name;
+      if (name === current) opt.selected = true;
+      sceneCollectionSelect.appendChild(opt);
+    }
+  }
+
+  async function loadProfiles(){
+    profileSelect.innerHTML = '';
+    let current = null;
+    let list = [];
+
+    try{
+      const r = await call('GetCurrentProfile');
+      current = r.responseData?.currentProfileName;
+    }catch{}
+
+    try{
+      const r = await call('GetProfileList');
+      list = r.responseData?.profiles ?? r.responseData?.profileNames ?? [];
+    }catch{}
+
+    const names = [];
+    for (const x of list){
+      if (typeof x === 'string') names.push(x);
+      else if (x?.profileName) names.push(x.profileName);
+      else if (x?.name) names.push(x.name);
+    }
+
+    for (const name of names){
+      const opt = document.createElement('option');
+      opt.value = name;
+      opt.textContent = name;
+      if (name === current) opt.selected = true;
+      profileSelect.appendChild(opt);
+    }
+  }
+
+  sceneCollectionSelect.onchange = async () => {
+    const name = sceneCollectionSelect.value;
+    if (!name) return;
+    try{ await call('SetCurrentSceneCollection', { sceneCollectionName: name }); }
+    catch{
+      try{ await call('SetCurrentSceneCollection', { sceneCollection: name }); } catch {}
+    }
+    initialLoad();
+  };
+
+  profileSelect.onchange = async () => {
+    const name = profileSelect.value;
+    if (!name) return;
+    try{ await call('SetCurrentProfile', { profileName: name }); }
+    catch{
+      try{ await call('SetCurrentProfile', { profile: name }); } catch {}
+    }
+  };
+
+  refreshCollectionsBtn.onclick = loadSceneCollections;
+  refreshProfilesBtn.onclick = loadProfiles;
+
+  // ---------- Live Controls ----------
+  async function loadStreamStatus(){
+    let active = false;
+    let reconnecting = false;
+    let timecode = null;
+
+    try{
+      const r = await call('GetStreamStatus');
+      active = !!r.responseData?.outputActive;
+      reconnecting = !!r.responseData?.outputReconnecting;
+      timecode = r.responseData?.outputTimecode;
+    }catch{
+      // Fallback for newer unified output APIs (best-effort)
+      try{
+        const r = await call('GetOutputStatus', { outputName: 'stream' });
+        active = !!r.responseData?.outputActive;
+        reconnecting = !!r.responseData?.outputReconnecting;
+        timecode = r.responseData?.outputTimecode;
+      }catch{}
+    }
+
+    streamBadge.textContent = active ? (reconnecting ? 'Reconnecting' : 'Live') : 'Off';
+    streamToggleBtn.textContent = active ? 'Stop Stream' : 'Start Stream';
+    streamStatus.textContent = timecode ? `Time: ${timecode}` : '';
+    streamToggleBtn.className = 'primary';
+    return active;
+  }
+
+  async function loadRecordStatus(){
+    let active = false;
+    let paused = false;
+    let timecode = null;
+
+    try{
+      const r = await call('GetRecordStatus');
+      active = !!r.responseData?.outputActive;
+      paused = !!r.responseData?.outputPaused;
+      timecode = r.responseData?.outputTimecode;
+    }catch{
+      try{
+        const r = await call('GetOutputStatus', { outputName: 'record' });
+        active = !!r.responseData?.outputActive;
+        paused = !!r.responseData?.outputPaused;
+        timecode = r.responseData?.outputTimecode;
+      }catch{}
+    }
+
+    recordBadge.textContent = active ? (paused ? 'Paused' : 'Recording') : 'Off';
+    recordToggleBtn.textContent = active ? 'Stop Record' : 'Start Record';
+    recordStatus.textContent = timecode ? `Time: ${timecode}` : '';
+    recordToggleBtn.className = 'primary';
+    return active;
+  }
+
+  async function loadLive(){
+    if (!identified) return;
+    await Promise.allSettled([loadStreamStatus(), loadRecordStatus()]);
+  }
+
+  streamToggleBtn.onclick = async () => {
+    if (!identified) return;
+    let active = false;
+    try{ active = await loadStreamStatus(); }catch{}
+    try{
+      if (active) await call('StopStream');
+      else await call('StartStream');
+    }catch(e){ console.error(e); }
+    loadStreamStatus();
+  };
+
+  recordToggleBtn.onclick = async () => {
+    if (!identified) return;
+    let active = false;
+    try{ active = await loadRecordStatus(); }catch{}
+    try{
+      if (active) await call('StopRecord');
+      else await call('StartRecord');
+    }catch(e){ console.error(e); }
+    loadRecordStatus();
+  };
+
+  // ---------- Scenes ----------
+  function makeSceneCard(name, isFav){
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    const head = document.createElement('div');
+    head.className = 'head-row';
+
+    const btn = document.createElement('button');
+    btn.className = 'scene-btn primary';
+    btn.textContent = name;
+    btn.onclick = async () => {
+      try{ await call('SetCurrentProgramScene', { sceneName: name }); } catch {}
+    };
+
+    const starBtn = document.createElement('button');
+    starBtn.className = 'star tiny';
+    starBtn.textContent = isFav ? '★' : '☆';
+    starBtn.title = isFav ? 'Remove favorite' : 'Add favorite';
+    starBtn.onclick = () => toggleFavScene(name);
+
+    head.appendChild(btn);
+    head.appendChild(starBtn);
+
+    card.appendChild(head);
+    return card;
+  }
+
+  async function loadScenesQuick(){
+    scenesQuickEl.innerHTML = '';
+    let scenes = [];
+    try{
+      const r = await call('GetSceneList');
+      scenes = r.responseData?.scenes ?? [];
+    }catch{}
+
+    const favSet = new Set(getFavScenes());
+
+    for (const sc of scenes){
+      const name = sc.sceneName;
+      scenesQuickEl.appendChild(makeSceneCard(name, favSet.has(name)));
+    }
+
+    renderFavoriteScenes();
+  }
+
+  async function renderFavoriteScenes(){
+    favScenesGrid.innerHTML = '';
+    let scenes = [];
+    try{
+      const r = await call('GetSceneList');
+      scenes = r.responseData?.scenes ?? [];
+    }catch{}
+
+    const favs = getFavScenes();
+    favScenesCount.textContent = String(favs.length);
+
+    if (favs.length === 0){
+      favScenesGrid.innerHTML = '<div class="hint">No favorite scenes yet.</div>';
+      return;
+    }
+
+    const sceneNames = new Set(scenes.map(s => s.sceneName));
+    const ordered = favs.filter(n => sceneNames.has(n));
+
+    for (const name of ordered){
+      const card = document.createElement('div');
+      card.className = 'card';
+
+      const head = document.createElement('div');
+      head.className = 'head-row';
+
+      const btn = document.createElement('button');
+      btn.className = 'scene-btn primary';
+      btn.textContent = name;
+      btn.onclick = async () => {
+        try{ await call('SetCurrentProgramScene', { sceneName: name }); } catch {}
+      };
+
+      const starBtn = document.createElement('button');
+      starBtn.className = 'star tiny';
+      starBtn.textContent = '★';
+      starBtn.title = 'Remove favorite';
+      starBtn.onclick = () => toggleFavScene(name);
+
+      head.appendChild(btn);
+      head.appendChild(starBtn);
+      card.appendChild(head);
+      favScenesGrid.appendChild(card);
+    }
+  }
+
+  // ---------- Studio Mode ----------
+  async function loadStudio(){
+    if (!identified) return;
+
+    let enabled = false;
+    try{
+      const r = await call('GetStudioModeEnabled');
+      enabled = !!r.responseData?.studioModeEnabled;
+    }catch{}
+
+    studioToggleBtn.textContent = enabled ? 'Disable Studio Mode' : 'Enable Studio Mode';
+    studioStatus.textContent = enabled ? 'Studio Mode is enabled.' : 'Studio Mode is disabled.';
+    takeBtn.disabled = !enabled;
+
+    let scenes = [];
+    try{
+      const r = await call('GetSceneList');
+      scenes = r.responseData?.scenes ?? [];
+    }catch{}
+
+    let currentProgram = null;
+    let currentPreview = null;
+
+    try{
+      const r = await call('GetCurrentProgramScene');
+      currentProgram = r.responseData?.currentProgramSceneName;
+    }catch{}
+
+    if (enabled){
+      try{
+        const r = await call('GetCurrentPreviewScene');
+        currentPreview = r.responseData?.currentPreviewSceneName;
+      }catch{}
+    }
+
+    const favSet = new Set(getFavScenes());
+
+    previewScenesEl.innerHTML = '';
+    programScenesEl.innerHTML = '';
+
+    for (const sc of scenes){
+      const name = sc.sceneName;
+
+      // Preview card
+      const pWrap = document.createElement('div');
+      pWrap.className = 'card';
+      const pHead = document.createElement('div');
+      pHead.className = 'head-row';
+
+      const pBtn = document.createElement('button');
+      pBtn.className = 'scene-btn';
+      pBtn.textContent = name + (name === currentPreview ? ' •' : '');
+      pBtn.disabled = !enabled;
+      pBtn.onclick = async () => {
+        try{ await call('SetCurrentPreviewScene', { sceneName: name }); } catch {}
+      };
+
+      const pStar = document.createElement('button');
+      pStar.className = 'star tiny';
+      pStar.textContent = favSet.has(name) ? '★' : '☆';
+      pStar.onclick = () => toggleFavScene(name);
+
+      pHead.appendChild(pBtn);
+      pHead.appendChild(pStar);
+      pWrap.appendChild(pHead);
+      previewScenesEl.appendChild(pWrap);
+
+      // Program card
+      const prWrap = document.createElement('div');
+      prWrap.className = 'card';
+      const prHead = document.createElement('div');
+      prHead.className = 'head-row';
+
+      const prBtn = document.createElement('button');
+      prBtn.className = 'scene-btn primary';
+      prBtn.textContent = name + (name === currentProgram ? ' •' : '');
+      prBtn.onclick = async () => {
+        try{ await call('SetCurrentProgramScene', { sceneName: name }); } catch {}
+      };
+
+      const prStar = document.createElement('button');
+      prStar.className = 'star tiny';
+      prStar.textContent = favSet.has(name) ? '★' : '☆';
+      prStar.onclick = () => toggleFavScene(name);
+
+      prHead.appendChild(prBtn);
+      prHead.appendChild(prStar);
+      prWrap.appendChild(prHead);
+      programScenesEl.appendChild(prWrap);
+    }
+  }
+
+  studioToggleBtn.onclick = async () => {
+    try{
+      const r = await call('GetStudioModeEnabled');
+      const enabled = !!r.responseData?.studioModeEnabled;
+      await call('SetStudioModeEnabled', { studioModeEnabled: !enabled });
+      loadStudio();
+    }catch(e){ console.error(e); }
+  };
+
+  takeBtn.onclick = async () => {
+    try{ await call('TriggerStudioModeTransition'); }
+    catch(e){ console.error(e); }
+  };
+
+  // ---------- Transitions ----------
+  async function loadTransitions(){
+    transitionSelect.innerHTML = '';
+    transitionButtons.innerHTML = '';
+
+    let transitions = [];
+    let currentName = null;
+    let currentDuration = null;
+
+    try{
+      const r = await call('GetCurrentSceneTransition');
+      currentName = r.responseData?.transitionName;
+    }catch{}
+
+    try{
+      const r = await call('GetCurrentSceneTransitionDuration');
+      currentDuration = r.responseData?.transitionDuration;
+    }catch{}
+
+    if (currentDuration != null){
+      transitionDuration.value = String(currentDuration);
+    }
+
+    try{
+      let r;
+      try{
+        r = await call('GetSceneTransitionList');
+        transitions = r.responseData?.transitions ?? [];
+      }catch{
+        r = await call('GetTransitionList');
+        transitions = r.responseData?.transitions ?? [];
+      }
+    }catch{}
+
+    for (const t of transitions){
+      const name = t.transitionName || t.name;
+      if (!name) continue;
+
+      const opt = document.createElement('option');
+      opt.value = name;
+      opt.textContent = name;
+      if (name === currentName) opt.selected = true;
+      transitionSelect.appendChild(opt);
+
+      const btn = document.createElement('button');
+      btn.className = 'small';
+      btn.textContent = name;
+      btn.onclick = async () => {
+        try{
+          await call('SetCurrentSceneTransition', { transitionName: name });
+          transitionSelect.value = name;
+        }catch(e){ console.error(e); }
+      };
+      transitionButtons.appendChild(btn);
+    }
+  }
+
+  applyTransitionBtn.onclick = async () => {
+    const name = transitionSelect.value;
+    const dur = Number(transitionDuration.value || '0');
+    try{ if (name) await call('SetCurrentSceneTransition', { transitionName: name }); }
+    catch(e){ console.error(e); }
+    try{ await call('SetCurrentSceneTransitionDuration', { transitionDuration: dur }); }
+    catch(e){ console.error(e); }
+  };
+
+  triggerTransitionBtn.onclick = async () => {
+    try{ await call('TriggerStudioModeTransition'); }
+    catch(e){ console.error(e); }
+  };
+
+  // ---------- Audio grouping + filter ----------
+  function getGroupFilterEnabled(){
+    return localStorage.getItem(LS_GROUP_FILTER_ENABLED) === 'true';
+  }
+  function setGroupFilterEnabled(val){
+    localStorage.setItem(LS_GROUP_FILTER_ENABLED, val ? 'true' : 'false');
+  }
+  function getSelectedGroups(){
+    try{ return JSON.parse(localStorage.getItem(LS_GROUP_FILTER) || '[]'); }
+    catch{ return []; }
+  }
+  function setSelectedGroups(arr){
+    localStorage.setItem(LS_GROUP_FILTER, JSON.stringify(Array.from(new Set(arr))));
+  }
+
+  async function getAudioCapableInputs(){
+    const resp = await call('GetInputList');
+    const inputs = resp.responseData?.inputs ?? [];
+    const out = [];
+
+    for (const input of inputs){
+      const name = input.inputName;
+      let currentMul = null;
+      let canMute = false;
+
+      try{
+        const vol = await call('GetInputVolume', { inputName: name });
+        currentMul = vol.responseData?.inputVolumeMul ?? 1.0;
+      }catch{}
+
+      try{
+        await call('GetInputMute', { inputName: name });
+        canMute = true;
+      }catch{}
+
+      if (currentMul === null && !canMute) continue;
+
+      out.push({ name, currentMul: currentMul ?? 1.0, canMute });
+    }
+    return out;
+  }
+
+  async function tryGetGroupList(){
+    try{
+      const resp = await call('GetGroupList');
+      return resp.responseData?.groups ?? [];
+    }catch{
+      return [];
+    }
+  }
+
+  async function tryGetGroupItems(groupName){
+    try{
+      const r1 = await call('GetGroupSceneItemList', { groupName });
+      return r1.responseData?.sceneItems ?? [];
+    }catch{
+      try{
+        const r2 = await call('GetGroupSceneItemList', { sceneName: groupName });
+        return r2.responseData?.sceneItems ?? [];
+      }catch{
+        return [];
+      }
+    }
+  }
+
+  async function buildGroupMap(){
+    const groups = await tryGetGroupList();
+    const map = new Map();
+    for (const g of groups){
+      const items = await tryGetGroupItems(g);
+      const names = new Set();
+      for (const it of items){
+        const sn = it.sourceName || it.sceneItemSourceName || it.inputName;
+        if (sn) names.add(sn);
+      }
+      map.set(g, names);
+    }
+    return map;
+  }
+
+  function assignInputsToGroups(inputs, groupMap){
+    const assignments = new Map();
+    for (const g of groupMap.keys()){
+      assignments.set(g, []);
+    }
+    assignments.set('Ungrouped', []);
+
+    for (const inp of inputs){
+      let placed = false;
+      for (const [g, setNames] of groupMap.entries()){
+        if (setNames.has(inp.name)){
+          assignments.get(g).push(inp);
+          placed = true;
+          break;
+        }
+      }
+      if (!placed) assignments.get('Ungrouped').push(inp);
+    }
+
+    for (const [g, arr] of Array.from(assignments.entries())){
+      if (g !== 'Ungrouped' && (!arr || arr.length === 0)){
+        assignments.delete(g);
+      }
+    }
+    return assignments;
+  }
+
+  function filterAssignments(assignments){
+    if (!getGroupFilterEnabled()) return assignments;
+
+    const selected = new Set(getSelectedGroups());
+    if (selected.size === 0) return assignments;
+
+    const filtered = new Map();
+    for (const [g, arr] of assignments.entries()){
+      if (g === 'Ungrouped') continue;
+      if (selected.has(g)) filtered.set(g, arr);
+    }
+    return filtered;
+  }
+
+  function renderAudioFilters(assignments){
+    audioFiltersHost.innerHTML = '';
+
+    const allGroups = Array.from(assignments.keys()).filter(g => g !== 'Ungrouped');
+    const selected = new Set(getSelectedGroups());
+    const enabled = getGroupFilterEnabled();
+
+    const card = document.createElement('div');
+    card.className = 'card filter-card';
+
+    const head = document.createElement('div');
+    head.className = 'row';
+    head.style.justifyContent = 'space-between';
+
+    const left = document.createElement('div');
+    left.style.flex = '3 1 320px';
+
+    const title = document.createElement('h3');
+    title.style.margin = '0';
+    title.textContent = 'Audio Group Filter';
+
+    const hint = document.createElement('div');
+    hint.className = 'hint';
+    hint.textContent = 'Enable to show only the groups you pick. Great for cast-only tablet views.';
+
+    left.appendChild(title);
+    left.appendChild(hint);
+
+    const right = document.createElement('div');
+    right.style.flex = '1 1 220px';
+
+    const toggleBtn = document.createElement('button');
+    toggleBtn.className = enabled ? 'primary' : '';
+    toggleBtn.textContent = enabled ? 'Filter: ON' : 'Filter: OFF';
+    toggleBtn.onclick = () => {
+      setGroupFilterEnabled(!enabled);
+      loadAudio();
+    };
+
+    right.appendChild(toggleBtn);
+
+    head.appendChild(left);
+    head.appendChild(right);
+
+    card.appendChild(head);
+
+    if (allGroups.length === 0){
+      const none = document.createElement('div');
+      none.className = 'hint';
+      none.style.marginTop = '10px';
+      none.textContent = 'No source groups found in this setup.';
+      card.appendChild(none);
+      audioFiltersHost.appendChild(card);
+      return;
+    }
+
+    const boxRow = document.createElement('div');
+    boxRow.className = 'checkbox-row';
+    boxRow.style.marginTop = '12px';
+
+    for (const g of allGroups){
+      const wrap = document.createElement('label');
+      wrap.className = 'checkbox';
+
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = selected.has(g);
+      cb.onchange = () => {
+        const newSel = new Set(getSelectedGroups());
+        cb.checked ? newSel.add(g) : newSel.delete(g);
+        setSelectedGroups([...newSel]);
+        if (getGroupFilterEnabled()){
+          loadAudio();
+        }
+      };
+
+      const span = document.createElement('span');
+      span.textContent = g;
+
+      wrap.appendChild(cb);
+      wrap.appendChild(span);
+      boxRow.appendChild(wrap);
+    }
+
+    const tools = document.createElement('div');
+    tools.className = 'row';
+    tools.style.marginTop = '12px';
+
+    const allBtn = document.createElement('button');
+    allBtn.className = 'small';
+    allBtn.textContent = 'Select All';
+    allBtn.onclick = () => {
+      setSelectedGroups(allGroups);
+      setGroupFilterEnabled(true);
+      loadAudio();
+    };
+
+    const noneBtn = document.createElement('button');
+    noneBtn.className = 'small';
+    noneBtn.textContent = 'Clear';
+    noneBtn.onclick = () => {
+      setSelectedGroups([]);
+      loadAudio();
+    };
+
+    tools.appendChild(allBtn);
+    tools.appendChild(noneBtn);
+
+    card.appendChild(boxRow);
+    card.appendChild(tools);
+
+    audioFiltersHost.appendChild(card);
+  }
+
+  function createMixerCard(inputObj){
+    const { name, currentMul, canMute } = inputObj;
+    const isFav = new Set(getFavInputs()).has(name);
+
+    const card = document.createElement('div');
+    card.className = 'card mixer-item';
+
+    const head = document.createElement('div');
+    head.className = 'head-row';
+
+    const title = document.createElement('div');
+    title.className = 'name';
+    title.textContent = name;
+
+    const starBtn = document.createElement('button');
+    starBtn.className = 'star tiny';
+    starBtn.textContent = isFav ? '★' : '☆';
+    starBtn.title = isFav ? 'Remove favorite' : 'Add favorite';
+    starBtn.onclick = () => toggleFavInput(name);
+
+    head.appendChild(title);
+    head.appendChild(starBtn);
+    card.appendChild(head);
+
+    const meter = document.createElement('div');
+    meter.className = 'meter';
+    const bar = document.createElement('div');
+    bar.className = 'meter-bar';
+    meter.appendChild(bar);
+    card.appendChild(meter);
+    meterBars.set(name, bar);
+
+    const slider = document.createElement('input');
+    slider.type = 'range';
+    slider.min = '0';
+    slider.max = '200';
+    slider.value = String(Math.round(currentMul * 100));
+    card.appendChild(slider);
+
+    const btnRow = document.createElement('div');
+    btnRow.className = 'row';
+
+    const muteBtn = document.createElement('button');
+    muteBtn.textContent = 'Mute / Unmute';
+    muteBtn.disabled = !canMute;
+
+    const zeroBtn = document.createElement('button');
+    zeroBtn.textContent = '0%';
+    zeroBtn.className = 'small';
+
+    const hundredBtn = document.createElement('button');
+    hundredBtn.textContent = '100%';
+    hundredBtn.className = 'small';
+
+    const boostBtn = document.createElement('button');
+    boostBtn.textContent = '150%';
+    boostBtn.className = 'small';
+
+    btnRow.appendChild(muteBtn);
+    btnRow.appendChild(zeroBtn);
+    btnRow.appendChild(hundredBtn);
+    btnRow.appendChild(boostBtn);
+    card.appendChild(btnRow);
+
+    muteBtn.onclick = async () => {
+      if (!canMute) return;
+      try{ await call('ToggleInputMute', { inputName: name }); }
+      catch(e){ console.error(e); }
+    };
+
+    function setSliderMul(mul){
+      const v = Math.max(0, Math.min(2, mul));
+      slider.value = String(Math.round(v * 100));
+      return v;
+    }
+
+    zeroBtn.onclick = async () => {
+      const mul = setSliderMul(0);
+      try{ await call('SetInputVolume', { inputName: name, inputVolumeMul: mul }); } catch {}
+      renderFavoriteInputs();
+    };
+    hundredBtn.onclick = async () => {
+      const mul = setSliderMul(1);
+      try{ await call('SetInputVolume', { inputName: name, inputVolumeMul: mul }); } catch {}
+      renderFavoriteInputs();
+    };
+    boostBtn.onclick = async () => {
+      const mul = setSliderMul(1.5);
+      try{ await call('SetInputVolume', { inputName: name, inputVolumeMul: mul }); } catch {}
+      renderFavoriteInputs();
+    };
+
+    let volTimer = null;
+    slider.oninput = () => {
+      clearTimeout(volTimer);
+      volTimer = setTimeout(async () => {
+        const mul = Math.max(0, Math.min(2, Number(slider.value) / 100));
+        try{ await call('SetInputVolume', { inputName: name, inputVolumeMul: mul }); }
+        catch(e){ console.error(e); }
+        renderFavoriteInputs();
+      }, 140);
+    };
+
+    return card;
+  }
+
+  function wireGroupAccordion(){
+    const groups = Array.from(document.querySelectorAll('details.group'));
+    groups.forEach(g => {
+      g.addEventListener('toggle', () => {
+        if (!g.open) return;
+        groups.forEach(other => {
+          if (other !== g) other.open = false;
+        });
+      });
+    });
+  }
+
+  function renderAudioGroups(assignments){
+    mixerGroupsEl.innerHTML = '';
+
+    const filteredAssignments = filterAssignments(assignments);
+    const groupEntries = Array.from(filteredAssignments.entries());
+
+    if (groupEntries.length === 0){
+      mixerGroupsEl.innerHTML = '<div class="hint">No audio inputs match the current filter.</div>';
+      return;
+    }
+
+    for (const [groupName, inputs] of groupEntries){
+      const details = document.createElement('details');
+      details.className = 'group';
+      details.open = (groupEntries.length === 1);
+
+      const summary = document.createElement('summary');
+      summary.textContent = `${groupName} (${inputs.length})`;
+      details.appendChild(summary);
+
+      const body = document.createElement('div');
+      body.className = 'group-body';
+
+      const grid = document.createElement('div');
+      grid.className = 'grid';
+
+      for (const inp of inputs){
+        grid.appendChild(createMixerCard(inp));
+      }
+
+      body.appendChild(grid);
+      details.appendChild(body);
+      mixerGroupsEl.appendChild(details);
+    }
+
+    wireGroupAccordion();
+  }
+
+  async function loadAudio(){
+    if (!identified) return;
+
+    meterBars.clear();
+    audioFiltersHost.innerHTML = '';
+    mixerGroupsEl.innerHTML = '<div class="hint">Loading audio inputs...</div>';
+
+    let inputs;
+    try{ inputs = await getAudioCapableInputs(); }
+    catch{
+      mixerGroupsEl.innerHTML = '<div class="hint">Could not load inputs.</div>';
+      return;
+    }
+
+    let groupMap = new Map();
+    try{ groupMap = await buildGroupMap(); } catch {}
+
+    const assignments = assignInputsToGroups(inputs, groupMap);
+
+    renderAudioFilters(assignments);
+    renderAudioGroups(assignments);
+
+    renderFavoriteInputs(inputs);
+  }
+
+  // ---------- Favorite Audio Panel ----------
+  function makeFavInputCard(inputObj){
+    const { name, currentMul, canMute } = inputObj;
+
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    const head = document.createElement('div');
+    head.className = 'head-row';
+
+    const title = document.createElement('div');
+    title.className = 'name';
+    title.textContent = name;
+
+    const starBtn = document.createElement('button');
+    starBtn.className = 'star tiny';
+    starBtn.textContent = '★';
+    starBtn.title = 'Remove favorite';
+    starBtn.onclick = () => toggleFavInput(name);
+
+    head.appendChild(title);
+    head.appendChild(starBtn);
+    card.appendChild(head);
+
+    const meter = document.createElement('div');
+    meter.className = 'meter';
+    const bar = document.createElement('div');
+    bar.className = 'meter-bar';
+    meter.appendChild(bar);
+    card.appendChild(meter);
+    meterBars.set(name, bar);
+
+    const slider = document.createElement('input');
+    slider.type = 'range';
+    slider.min = '0';
+    slider.max = '200';
+    slider.value = String(Math.round((currentMul ?? 1) * 100));
+    card.appendChild(slider);
+
+    const row = document.createElement('div');
+    row.className = 'row';
+
+    const muteBtn = document.createElement('button');
+    muteBtn.textContent = 'Mute';
+    muteBtn.disabled = !canMute;
+
+    const unmuteBtn = document.createElement('button');
+    unmuteBtn.textContent = 'Unmute';
+    unmuteBtn.disabled = !canMute;
+
+    row.appendChild(muteBtn);
+    row.appendChild(unmuteBtn);
+    card.appendChild(row);
+
+    muteBtn.onclick = async () => {
+      try{ await call('SetInputMute', { inputName: name, inputMuted: true }); } catch {}
+    };
+    unmuteBtn.onclick = async () => {
+      try{ await call('SetInputMute', { inputName: name, inputMuted: false }); } catch {}
+    };
+
+    let volTimer = null;
+    slider.oninput = () => {
+      clearTimeout(volTimer);
+      volTimer = setTimeout(async () => {
+        const mul = Math.max(0, Math.min(2, Number(slider.value) / 100));
+        try{ await call('SetInputVolume', { inputName: name, inputVolumeMul: mul }); }
+        catch(e){ console.error(e); }
+      }, 140);
+    };
+
+    return card;
+  }
+
+  async function renderFavoriteInputs(preFetchedInputs){
+    favInputsGrid.innerHTML = '';
+    const favs = getFavInputs();
+    favInputsCount.textContent = String(favs.length);
+
+    if (favs.length === 0){
+      favInputsGrid.innerHTML = '<div class="hint">No favorite audio sources yet.</div>';
+      return;
+    }
+
+    let inputs = preFetchedInputs;
+    if (!inputs){
+      try{ inputs = await getAudioCapableInputs(); } catch { inputs = []; }
+    }
+
+    const byName = new Map(inputs.map(i => [i.name, i]));
+    const ordered = favs.filter(n => byName.has(n));
+
+    if (ordered.length === 0){
+      favInputsGrid.innerHTML = '<div class="hint">Favorites not found in current inputs.</div>';
+      return;
+    }
+
+    for (const name of ordered){
+      favInputsGrid.appendChild(makeFavInputCard(byName.get(name)));
+    }
+  }
+
+  // ---------- Initial load ----------
+  async function initialLoad(){
+    if (!identified) return;
+
+    await Promise.allSettled([
+      loadSceneCollections(),
+      loadProfiles(),
+      loadLive(),
+      loadTransitions(),
+      loadScenesQuick(),
+      loadStudio(),
+      loadAudio()
+    ]);
+
+    renderFavoriteScenes();
+  }
+
+})();
+</script>
+
+</body>
+</html>
