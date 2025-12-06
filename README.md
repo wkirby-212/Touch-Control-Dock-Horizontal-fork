@@ -1,4 +1,4 @@
-# Touch Control Dock — v8
+# Touch Control Dock - friendly UI
 
 A touch-first control surface intended for use with OBS via **obs-websocket v5**.
 
@@ -10,7 +10,7 @@ The HTML UI is the primary deliverable; the C++ dock is optional.
 
 ---
 
-## What’s new in v8
+## What’s new in this version
 
 - **HYTE Y70 Touch layout support**
   - Auto-detects ultra-wide, short displays.
