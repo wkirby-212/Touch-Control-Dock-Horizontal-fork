@@ -1,0 +1,2387 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>Touch Control Dock</title>
+<style>
+  :root{
+    --pad: 18px;
+    --radius: 20px;
+    --font: 18px;
+    --gap: 16px;
+
+    --bg: #050507;
+    --surface: #111217;
+    --surface-2: #161821;
+    --surface-soft: #1b1d26;
+    --surface-soft-2: #212331;
+
+    --border-subtle: rgba(255,255,255,0.04);
+    --border-strong: rgba(255,255,255,0.08);
+
+    --accent: #4f8cff;
+    --accent-soft: rgba(79,140,255,0.16);
+    --accent-soft-2: rgba(79,140,255,0.26);
+
+    --danger: #ff4f4f;
+    --danger-soft: rgba(255,79,79,0.16);
+
+    --ok: #3fb57f;
+    --ok-soft: rgba(63,181,127,0.14);
+
+    --text: #f8f9ff;
+    --text-soft: #a9afc3;
+    --text-mute: #626882;
+    --text-strong: #ffffff;
+
+    --shadow-soft: 0 18px 45px rgba(0,0,0,0.55);
+
+    --btn-soft: #191b24;
+  }
+
+  *{
+    box-sizing:border-box;
+  }
+
+  html, body{
+    margin:0;
+    padding:0;
+    width:100%;
+    height:100%;
+    background:radial-gradient(circle at top, #141726 0, #050509 52%);
+    color:var(--text);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size:var(--font);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body{
+    display:flex;
+    align-items:stretch;
+    justify-content:center;
+    padding:0;
+  }
+
+  #app{
+    width:100%;
+    height:100%;
+    max-width:1024px;
+    max-height:768px;
+    padding:var(--pad);
+    display:flex;
+    flex-direction:column;
+    gap:var(--gap);
+  }
+
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:var(--gap);
+  }
+
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+
+  .brand-logo{
+    width:36px;
+    height:36px;
+    border-radius:14px;
+    background:
+      radial-gradient(circle at 30% 20%, #ffffff 0, #ffd37a 25%, transparent 36%),
+      radial-gradient(circle at 72% 80%, rgba(255,255,255,0.65) 0, rgba(255,255,255,0) 40%),
+      conic-gradient(from 180deg at 50% 50%, #262b46 0deg, #4f8cff 100deg, #d963ff 220deg, #ffd37a 315deg, #262b46 360deg);
+    box-shadow:0 14px 28px rgba(0,0,0,0.55);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    overflow:hidden;
+  }
+
+  .brand-inner{
+    width:22px;
+    height:22px;
+    border-radius:9px;
+    background:radial-gradient(circle at 30% 20%, #12141f 0, #050508 60%);
+    box-shadow:0 0 0 1px rgba(255,255,255,0.08);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+  }
+
+  .brand-inner::before{
+    content:"";
+    position:absolute;
+    inset:6px;
+    border-radius:7px;
+    border:1px solid rgba(255,255,255,0.08);
+    box-shadow:0 0 18px rgba(0,0,0,0.75) inset;
+  }
+
+  .brand-dot{
+    width:6px;
+    height:6px;
+    border-radius:99px;
+    background:radial-gradient(circle at 30% 20%, #ffffff 0, #ffd37a 40%, #ff9b4f 100%);
+    box-shadow:0 0 14px rgba(255,214,150,0.9);
+  }
+
+  .brand-text{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+  }
+
+  .brand-main{
+    font-weight:600;
+    letter-spacing:0.03em;
+    font-size:0.98rem;
+  }
+
+  .brand-sub{
+    font-size:0.74rem;
+    color:var(--text-soft);
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+  }
+
+  .conn-block{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    background:linear-gradient(135deg, rgba(28,33,56,0.98), rgba(22,25,41,0.98));
+    border-radius:999px;
+    padding:8px 14px;
+    box-shadow:0 12px 28px rgba(0,0,0,0.7);
+    border:1px solid rgba(255,255,255,0.05);
+  }
+
+  .conn-pill{
+    font-size:0.78rem;
+    padding:5px 11px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,0.08);
+    background:radial-gradient(circle at 0% 0%, rgba(79,140,255,0.35), rgba(31,37,65,0.9));
+    color:var(--text);
+  }
+
+  .conn-form{
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+
+  .conn-form label{
+    display:flex;
+    align-items:center;
+    gap:4px;
+    font-size:0.8rem;
+    color:var(--text-soft);
+  }
+
+  .conn-form input{
+    width:82px;
+    padding:4px 8px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,0.1);
+    background:rgba(10,12,20,0.9);
+    color:var(--text);
+    font-size:0.8rem;
+    outline:none;
+  }
+
+  .conn-form input:focus{
+    border-color:var(--accent);
+    box-shadow:0 0 0 1px rgba(79,140,255,0.6);
+  }
+
+  .conn-form .password{
+    width:120px;
+  }
+
+  .conn-form button{
+    border-radius:999px;
+    padding:6px 14px;
+    font-size:0.78rem;
+  }
+
+  main{
+    flex:1;
+    display:flex;
+    gap:var(--gap);
+    min-height:0;
+  }
+
+  .left-rail{
+    width:260px;
+    max-width:40%;
+    background:radial-gradient(circle at top left, rgba(79,140,255,0.18) 0, rgba(79,140,255,0.02) 38%, transparent 70%), linear-gradient(165deg, rgba(16,18,31,0.96), rgba(5,6,12,0.98));
+    border-radius:28px;
+    padding:16px;
+    box-shadow:var(--shadow-soft);
+    border:1px solid var(--border-subtle);
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+  }
+
+  .right-area{
+    flex:1;
+    background:radial-gradient(circle at top, rgba(79,140,255,0.06), rgba(7,8,15,0.96));
+    border-radius:28px;
+    padding:14px 16px 16px;
+    box-shadow:var(--shadow-soft);
+    border:1px solid var(--border-subtle);
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    min-width:0;
+  }
+
+  .pill-label{
+    font-size:0.72rem;
+    text-transform:uppercase;
+    letter-spacing:0.12em;
+    color:var(--text-mute);
+  }
+
+  .conn-status-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+  }
+
+  #connStatus{
+    font-size:0.78rem;
+    color:var(--text-soft);
+  }
+
+  .layout-select{
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+
+  .layout-select select{
+    padding:4px 10px;
+    border-radius:999px;
+    background:rgba(17,19,31,0.96);
+    color:var(--text-soft);
+    border:1px solid rgba(255,255,255,0.08);
+    font-size:0.78rem;
+  }
+
+  .layout-select select:focus{
+    outline:none;
+    border-color:var(--accent);
+  }
+
+  .content{
+    flex:1;
+    display:flex;
+    gap:16px;
+    min-height:0;
+  }
+
+  .home-preview{
+    flex:1;
+    border-radius:22px;
+    background:
+      radial-gradient(circle at top left, rgba(79,140,255,0.18), transparent 55%),
+      linear-gradient(165deg, #151828, #05060c);
+    padding:16px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    border:1px solid rgba(255,255,255,0.06);
+  }
+
+  .home-subtitle{
+    font-size:0.86rem;
+    color:var(--text-soft);
+  }
+
+  .home-grid{
+    margin-top:8px;
+    display:grid;
+    grid-template-columns:repeat(3, minmax(0,1fr));
+    gap:12px;
+  }
+
+  .tile-btn{
+    border-radius:18px;
+    border:none;
+    padding:10px 10px 11px;
+    background:radial-gradient(circle at top left, rgba(79,140,255,0.25), rgba(24,27,44,0.9));
+    color:var(--text);
+    text-align:left;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    box-shadow:0 10px 24px rgba(0,0,0,0.6);
+    cursor:pointer;
+    outline:none;
+    position:relative;
+    overflow:hidden;
+  }
+
+  .tile-btn::before{
+    content:"";
+    position:absolute;
+    inset:-30%;
+    background:
+      radial-gradient(circle at 0% 0%, rgba(255,255,255,0.2), transparent 50%),
+      radial-gradient(circle at 100% 0%, rgba(217,99,255,0.35), transparent 55%);
+    opacity:0;
+    transition:opacity 0.18s ease-out;
+    pointer-events:none;
+  }
+
+  .tile-btn:hover::before{
+    opacity:1;
+  }
+
+  .tile-btn:active{
+    transform:translateY(1px) scale(0.995);
+  }
+
+  .tile-main{
+    font-weight:600;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    font-size:0.82rem;
+  }
+
+  .tile-sub{
+    font-size:0.76rem;
+    color:var(--text-soft);
+  }
+
+  .tile-row-badges{
+    display:flex;
+    gap:6px;
+    margin-top:8px;
+  }
+
+  .tile-badge{
+    font-size:0.7rem;
+    padding:3px 7px;
+    border-radius:999px;
+    background:rgba(5,6,16,0.8);
+    border:1px solid rgba(255,255,255,0.08);
+    color:var(--text-soft);
+  }
+
+  .tile-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+
+  .hint-pill{
+    border-radius:999px;
+    padding:6px 11px;
+    background:rgba(5,6,16,0.9);
+    border:1px solid rgba(255,255,255,0.06);
+    font-size:0.74rem;
+    color:var(--text-soft);
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+
+  .dot{
+    width:6px;
+    height:6px;
+    border-radius:999px;
+    background:var(--accent);
+    box-shadow:0 0 10px rgba(79,140,255,0.8);
+  }
+
+  .views{
+    flex:1;
+    min-width:0;
+  }
+
+  .view{
+    display:none;
+    width:100%;
+    height:100%;
+  }
+
+  .view.active{
+    display:block;
+  }
+
+  .panel-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    margin-bottom:8px;
+  }
+
+  .panel-header h2{
+    margin:0;
+    font-size:0.98rem;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+  }
+
+  .back-btn{
+    border-radius:999px;
+    padding:6px 12px;
+    font-size:0.78rem;
+    border:1px solid rgba(255,255,255,0.12);
+    background:rgba(12,13,24,0.96);
+    color:var(--text-soft);
+    cursor:pointer;
+  }
+
+  .back-btn:hover{
+    background:rgba(20,22,36,0.98);
+  }
+
+  .panel-body{
+    height:calc(100% - 32px);
+    border-radius:20px;
+    background:radial-gradient(circle at top left, rgba(79,140,255,0.08), rgba(10,11,20,0.98));
+    padding:12px;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,0.04);
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    overflow:hidden;
+  }
+
+  .two-col{
+    display:grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap:12px;
+    height:100%;
+    min-height:0;
+  }
+
+  .card{
+    border-radius:18px;
+    background:linear-gradient(165deg, rgba(16,18,29,1), rgba(7,8,16,0.98));
+    padding:10px 11px;
+    box-shadow:0 14px 32px rgba(0,0,0,0.65);
+    border:1px solid var(--border-subtle);
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    min-height:0;
+  }
+
+  .card-header-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+  }
+
+  h3{
+    margin:0;
+    font-size:0.86rem;
+  }
+
+  h4{
+    margin:0;
+    font-size:0.8rem;
+    color:var(--text-soft);
+  }
+
+  .badge{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:999px;
+    padding:3px 8px;
+    font-size:0.7rem;
+    background:rgba(7,9,18,0.9);
+    border:1px solid rgba(255,255,255,0.12);
+    color:var(--text-soft);
+    gap:5px;
+  }
+
+  .badge-dot{
+    width:6px;
+    height:6px;
+    border-radius:999px;
+    background:var(--accent);
+    box-shadow:0 0 6px rgba(79,140,255,0.7);
+  }
+
+  .badge-ok{
+    background:var(--ok-soft);
+    color:#d4ffe9;
+    border-color:rgba(0,0,0,0.3);
+  }
+
+  .badge-danger{
+    background:var(--danger-soft);
+    color:#ffd6d6;
+    border-color:rgba(0,0,0,0.3);
+  }
+
+  .badge-soft{
+    background:var(--accent-soft);
+    color:#d8e4ff;
+    border-color:rgba(0,0,0,0.25);
+  }
+
+  .status{
+    font-size:0.8rem;
+    color:var(--text-soft);
+  }
+
+  .buttons-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+
+  button{
+    font-family:inherit;
+  }
+
+  .primary{
+    border:none;
+    border-radius:999px;
+    padding:7px 14px;
+    font-size:0.82rem;
+    background:linear-gradient(135deg, #4f8cff, #80b5ff);
+    color:#050612;
+    box-shadow:0 10px 24px rgba(0,0,0,0.75);
+    cursor:pointer;
+  }
+
+  .primary:disabled{
+    opacity:0.4;
+    cursor:default;
+    box-shadow:none;
+  }
+
+  .primary.secondary{
+    background:linear-gradient(135deg, #2a314a, #171926);
+    color:var(--text-soft);
+  }
+
+  .danger{
+    background:linear-gradient(135deg, #ff4f6e, #ff7f7f);
+    color:#220308;
+  }
+
+  .ghost{
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,0.16);
+    background:rgba(13,15,26,0.96);
+    padding:6px 11px;
+    font-size:0.78rem;
+    color:var(--text-soft);
+    cursor:pointer;
+  }
+
+  .ghost:disabled{
+    opacity:0.38;
+    cursor:default;
+  }
+
+  .ghost:hover:not(:disabled){
+    background:rgba(19,21,32,0.99);
+  }
+
+  select, input[type="number"]{
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,0.14);
+    background:rgba(10,12,21,0.98);
+    color:var(--text);
+    padding:5px 9px;
+    font-size:0.8rem;
+    outline:none;
+  }
+
+  select:focus, input[type="number"]:focus{
+    border-color:var(--accent);
+  }
+
+  .list{
+    max-height:220px;
+    overflow:auto;
+    margin-top:4px;
+    border-radius:12px;
+    background:radial-gradient(circle at top left, rgba(79,140,255,0.10), rgba(8,9,15,0.98));
+    border:1px solid rgba(255,255,255,0.06);
+  }
+
+  .list-row{
+    padding:6px 8px;
+    font-size:0.8rem;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:6px;
+  }
+
+  .list-row:nth-child(2n){
+    background:rgba(8,10,18,0.96);
+  }
+
+  .list-row span{
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  .list-row small{
+    font-size:0.72rem;
+    color:var(--text-mute);
+  }
+
+  .list-row button{
+    white-space:nowrap;
+  }
+
+  .scene-badges{
+    display:flex;
+    gap:5px;
+  }
+
+  .mixer-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));
+    gap:8px;
+  }
+
+  .mixer-item{
+    padding:6px 7px;
+    border-radius:12px;
+    background:linear-gradient(150deg, rgba(15,17,29,1), rgba(5,6,13,0.98));
+    border:1px solid rgba(255,255,255,0.06);
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+  }
+
+  .mixer-label{
+    display:flex;
+    justify-content:space-between;
+    font-size:0.78rem;
+    color:var(--text-soft);
+  }
+
+  .mixer-actions{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:6px;
+  }
+
+  .meter-wrap{
+    height:18px;
+    border-radius:999px;
+    background:rgba(5,6,14,0.96);
+    overflow:hidden;
+    box-shadow:0 0 0 1px rgba(255,255,255,0.06);
+  }
+
+  .meter-bar{
+    height:100%;
+    width:0%;
+    border-radius:999px;
+    background:linear-gradient(90deg, #3fb57f, #f5c84b, #ff4f4f);
+    transition:width 0.08s linear;
+  }
+
+  .fav-icon{
+    border-radius:999px;
+    width:26px;
+    height:26px;
+    border:none;
+    background:rgba(10,12,23,0.98);
+    color:var(--text-soft);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    box-shadow:0 6px 16px rgba(0,0,0,0.75);
+  }
+
+  .fav-icon.active{
+    background:radial-gradient(circle at 30% 20%, #ffd37a 0, #ff9b4f 50%, #8c4f22 100%);
+    color:#220a02;
+  }
+
+  .fav-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(150px,1fr));
+    gap:8px;
+  }
+
+  .fav-card{
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,0.08);
+    background:radial-gradient(circle at top left, rgba(79,140,255,0.10), rgba(10,11,20,0.96));
+    padding:8px;
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+  }
+
+  .fav-card-header{
+    display:flex;
+    justify-content:space-between;
+    gap:6px;
+    align-items:center;
+  }
+
+  .fav-card-name{
+    font-size:0.8rem;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  .fav-card-controls{
+    display:flex;
+    gap:4px;
+    flex-wrap:wrap;
+  }
+
+  .fav-card-controls button{
+    font-size:0.72rem;
+    padding:3px 7px;
+    border-radius:999px;
+  }
+
+  .head-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+  }
+
+  .head-row small{
+    font-size:0.74rem;
+    color:var(--text-mute);
+  }
+
+  .scroll{
+    flex:1;
+    overflow:auto;
+    padding-right:4px;
+  }
+
+  .filters-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(220px,1fr));
+    gap:8px;
+  }
+
+  .filter-pill-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:4px;
+  }
+
+  .chip{
+    border-radius:999px;
+    padding:4px 9px;
+    background:rgba(8,10,18,0.98);
+    border:1px solid rgba(255,255,255,0.08);
+    font-size:0.74rem;
+    color:var(--text-soft);
+  }
+
+  .chip.highlight{
+    border-color:var(--accent);
+    background:rgba(11,14,28,0.98);
+  }
+
+  .row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px;
+    align-items:center;
+  }
+
+  .two-col{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:var(--gap);
+  }
+
+  @media (min-width:880px){
+    .two-col{
+      grid-template-columns:1.3fr 1fr;
+    }
+  }
+
+  .hint{
+    font-size:0.76rem;
+    color:var(--text-mute);
+  }
+
+  .small{
+    font-size:0.74rem;
+    padding:4px 10px;
+  }
+
+  .danger-soft{
+    background:var(--danger-soft);
+    color:#ffd8d8;
+    border-color:rgba(0,0,0,0.3);
+  }
+
+  .ok-soft{
+    background:var(--ok-soft);
+    color:#dfffe9;
+  }
+
+  .pill-strong{
+    background:linear-gradient(135deg, #4f8cff, #80b5ff);
+    color:#050611;
+    border:none;
+  }
+
+  .pill-subtle{
+    background:rgba(10,11,18,0.98);
+    border-color:rgba(255,255,255,0.12);
+  }
+
+  .pill-subtle strong{
+    color:var(--text);
+  }
+
+  .pill-caption{
+    font-size:0.74rem;
+    color:var(--text-soft);
+  }
+
+  .footer{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-top:4px;
+  }
+
+  .footer small{
+    font-size:0.7rem;
+    color:var(--text-mute);
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <header>
+    <div class="brand">
+      <div class="brand-logo">
+        <div class="brand-inner">
+          <div class="brand-dot"></div>
+        </div>
+      </div>
+      <div class="brand-text">
+        <div class="brand-main">Touch Control Dock</div>
+        <div class="brand-sub">Scenes • Audio • Studio</div>
+      </div>
+    </div>
+    <div class="conn-block">
+      <div id="connStatusHeader" class="conn-pill">Disconnected</div>
+      <div class="conn-form">
+        <label>
+          Host
+          <input id="host" type="text" value="127.0.0.1" />
+        </label>
+        <label>
+          Port
+          <input id="port" type="number" value="4455" />
+        </label>
+        <label>
+          Password
+          <input id="password" class="password" type="password" autocomplete="current-password" />
+        </label>
+        <button id="connectBtn" class="primary secondary">Connect</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="left-rail">
+      <div class="pill-label">OBS Connection</div>
+      <div class="conn-status-row">
+        <div id="connStatus">Disconnected.</div>
+        <div class="layout-select">
+          <span class="pill-caption">Layout</span>
+          <select id="layoutSelect">
+            <option value="">Default</option>
+            <option value="y60">3x3 Compact</option>
+            <option value="y70">Tall 2x4</option>
+            <option value="y80">Buttons + Mixer</option>
+          </select>
+        </div>
+      </div>
+      <div class="home-preview">
+        <div class="tile-row">
+          <div>
+            <div class="pill-label">Quick Actions</div>
+            <div class="home-subtitle">Tap a tile to open full controls.</div>
+          </div>
+          <div class="hint-pill">
+            <div class="dot"></div>
+            <span>Live updates from OBS WebSocket.</span>
+          </div>
+        </div>
+
+        <div class="home-grid">
+          <button class="tile-btn" data-view-target="view-scenes">
+            <div class="tile-main">Scene</div>
+          </button>
+          <button class="tile-btn" data-view-target="view-live">
+            <div class="tile-main">Start</div>
+            <div class="tile-sub">Record / Stream</div>
+          </button>
+          <button class="tile-btn" data-view-target="view-mic">
+            <div class="tile-main">Favourites</div>
+          </button>
+          <button class="tile-btn" data-view-target="view-audio">
+            <div class="tile-main">Audio</div>
+          </button>
+          <button class="tile-btn" data-view-target="view-settings">
+            <div class="tile-main">Settings</div>
+          </button>
+          <button class="tile-btn" data-view-target="view-virtual">
+            <div class="tile-main">Virtual</div>
+            <div class="tile-sub">Cam</div>
+          </button>
+          <button class="tile-btn" data-view-target="view-scenes">
+            <div class="tile-main">Studio</div>
+            <div class="tile-sub">Mode</div>
+          </button>
+          <button class="tile-btn" data-view-target="view-home">
+            <div class="tile-main">Home</div>
+          </button>
+        </div>
+      </div>
+
+      <div class="footer">
+        <small>Touch-first dock for OBS Studio via WebSocket v5.</small>
+        <small>Designed for 7"–10" tablets.</small>
+      </div>
+    </div>
+
+    <div class="right-area">
+      <div class="pill-label">Control Surface</div>
+      <div class="views">
+        <!-- Home view -->
+        <section id="view-home" class="view active">
+          <div class="panel-header">
+            <h2>Overview</h2>
+          </div>
+          <div class="panel-body">
+            <div class="two-col">
+              <div class="card">
+                <div class="card-header-row">
+                  <h3>Scenes &amp; Studio</h3>
+                  <span class="badge badge-soft">
+                    <span class="badge-dot"></span>
+                    Program / Preview
+                  </span>
+                </div>
+                <div class="status">
+                  Use the left tiles to jump to detailed controls. This overview is just a read-only summary of key systems.
+                </div>
+                <div class="list" id="scenesSummary"></div>
+              </div>
+              <div class="card">
+                <div class="card-header-row">
+                  <h3>Live Outputs</h3>
+                  <span class="badge badge-ok">
+                    <span class="badge-dot"></span>
+                    Monitored
+                  </span>
+                </div>
+                <div class="status" id="outputsSummary">
+                  Streaming and recording status will appear here once connected to OBS.
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Scenes / Studio panel -->
+        <section id="view-scenes" class="view" hidden>
+          <div class="panel-header">
+            <button class="back-btn" data-view-back>&larr; Home</button>
+            <h2>Scenes &amp; Studio</h2>
+          </div>
+          <div class="panel-body">
+            <div class="two-col">
+              <div class="card">
+                <div class="card-header-row">
+                  <h3>Program Scenes</h3>
+                  <div class="row">
+                    <span class="badge">Program</span>
+                    <span class="badge">Preview</span>
+                  </div>
+                </div>
+                <div class="two-col">
+                  <div>
+                    <h4>Program</h4>
+                    <div class="list" id="programScenes"></div>
+                  </div>
+                  <div>
+                    <h4>Preview</h4>
+                    <div class="list" id="previewScenes"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-header-row">
+                  <h3>Studio Mode</h3>
+                  <span id="studioStatus" class="badge">Unknown</span>
+                </div>
+                <div class="status">
+                  Toggle Studio Mode and perform safe cuts between Preview and Program.
+                </div>
+                <div class="buttons-row" style="margin-top:8px;">
+                  <button id="studioToggleBtn" class="primary secondary">Toggle Studio Mode</button>
+                  <button id="takeBtn" class="primary">Take (Cut)</button>
+                </div>
+                <div class="card" style="margin-top:10px;">
+                  <h4>Scene Collections &amp; Profiles</h4>
+                  <div class="row">
+                    <div>
+                      <h4>Collections</h4>
+                      <div class="row">
+                        <select id="sceneCollectionSelect"></select>
+                        <button id="refreshCollectionsBtn" class="small">Refresh</button>
+                      </div>
+                      <div class="hint">Switch the whole scene setup at once.</div>
+                    </div>
+                    <div>
+                      <h4>Profiles</h4>
+                      <div class="row">
+                        <select id="profileSelect"></select>
+                        <button id="refreshProfilesBtn" class="small">Refresh</button>
+                      </div>
+                      <div class="hint">Profiles affect output/stream settings.</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card" style="margin-top:10px;">
+              <div class="card-header-row">
+                <h3>Favorite Scenes</h3>
+                <span class="badge">
+                  <span class="badge-dot"></span>
+                  <span id="favScenesCount">0</span> pinned
+                </span>
+              </div>
+              <div class="hint">
+                Star scenes below to keep them on this page. Tap a card to cut to that scene immediately.
+              </div>
+              <div id="favScenesGrid" class="fav-grid"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Record / Stream panel -->
+        <section id="view-live" class="view" hidden>
+          <div class="panel-header">
+            <button class="back-btn" data-view-back>&larr; Home</button>
+            <h2>Record &amp; Stream</h2>
+          </div>
+          <div class="panel-body">
+            <div class="two-col">
+              <div class="card">
+                <h3>Recording <span id="recordBadge" class="badge">Idle</span></h3>
+                <div class="status" id="recordStatus">Not recording.</div>
+                <div class="row" style="margin-top:12px;">
+                  <button id="recordToggleBtn" class="primary">Start Recording</button>
+                </div>
+              </div>
+              <div class="card">
+                <h3>Streaming <span id="streamBadge" class="badge">Idle</span></h3>
+                <div class="status" id="streamStatus">Not streaming.</div>
+                <div class="row" style="margin-top:12px;">
+                  <button id="streamToggleBtn" class="primary">Start Streaming</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Favourites audio panel -->
+        <section id="view-mic" class="view" hidden>
+          <div class="panel-header">
+            <button class="back-btn" data-view-back>&larr; Home</button>
+            <h2>Favourites</h2>
+          </div>
+          <div class="panel-body">
+            <div class="card">
+              <h3>Favourite Audio <span class="badge"><span id="favInputsCount">0</span> pinned</span></h3>
+              <div id="favInputsGrid" class="fav-grid"></div>
+              <div class="hint">Tap ★ on any audio source to add/remove favourites.</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Audio mixer panel -->
+        <section id="view-audio" class="view" hidden>
+          <div class="panel-header">
+            <button class="back-btn" data-view-back>&larr; Home</button>
+            <h2>Audio Mixer</h2>
+          </div>
+          <div class="panel-body">
+            <div class="two-col">
+              <div class="card">
+                <div class="card-header-row">
+                  <h3>Mixer</h3>
+                  <span class="badge">
+                    <span class="badge-dot"></span>
+                    Live
+                  </span>
+                </div>
+                <div id="mixerGroups" class="mixer-grid"></div>
+              </div>
+              <div class="card">
+                <div class="card-header-row">
+                  <h3>Filters</h3>
+                  <span class="badge badge-soft">
+                    Chain
+                  </span>
+                </div>
+                <div id="audioFiltersHost" class="scroll"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Settings / transitions panel -->
+        <section id="view-settings" class="view" hidden>
+          <div class="panel-header">
+            <button class="back-btn" data-view-back>&larr; Home</button>
+            <h2>Settings &amp; Transitions</h2>
+          </div>
+          <div class="panel-body">
+            <div class="two-col">
+              <div class="card">
+                <div class="card-header-row">
+                  <h3>Transition Control</h3>
+                  <span class="badge badge-soft">
+                    Manual
+                  </span>
+                </div>
+                <div class="row">
+                  <label>
+                    <span class="pill-caption">Transition</span><br/>
+                    <select id="transitionSelect"></select>
+                  </label>
+                  <label>
+                    <span class="pill-caption">Duration (ms)</span><br/>
+                    <input type="number" id="transitionDuration" min="0" max="20000" step="50" />
+                  </label>
+                  <div class="buttons-row">
+                    <button id="applyTransitionBtn" class="ghost small">Apply</button>
+                    <button id="triggerTransitionBtn" class="primary small">Trigger</button>
+                  </div>
+                </div>
+                <div id="transitionButtons" class="buttons-row" style="margin-top:10px;"></div>
+              </div>
+              <div class="card">
+                <div class="card-header-row">
+                  <h3>Layout Profile</h3>
+                </div>
+                <div class="status">
+                  Layout profiles adjust density and emphasis for different tablet sizes or personal preference.
+                </div>
+                <div class="buttons-row" style="margin-top:10px;">
+                  <button class="ghost small" data-layout="">Default</button>
+                  <button class="ghost small" data-layout="y60">3x3 Compact</button>
+                  <button class="ghost small" data-layout="y70">Tall 2x4</button>
+                  <button class="ghost small" data-layout="y80">Buttons + Mixer</button>
+                </div>
+                <div class="hint" style="margin-top:6px;">
+                  You can also set <code>?layout=y70</code> in the browser URL to force a profile.
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Virtual Cam -->
+        <section id="view-virtual" class="view" hidden>
+          <div class="panel-header">
+            <button class="back-btn" data-view-back>&larr; Home</button>
+            <h2>Virtual Camera</h2>
+          </div>
+          <div class="panel-body">
+            <div class="card">
+              <h3>Virtual Camera <span id="virtualBadge" class="badge">Idle</span></h3>
+              <div class="status" id="virtualStatus">Virtual Camera status unknown.</div>
+              <div class="row" style="margin-top:12px;">
+                <button id="virtualToggleBtn" class="primary">Start Virtual Cam</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Exit placeholder (view still present but tile now points to Scenes/Studio) -->
+        <section id="view-exit" class="view" hidden>
+          <div class="panel-header">
+            <button class="back-btn" data-view-back>&larr; Home</button>
+            <h2>Exit</h2>
+          </div>
+          <div class="panel-body">
+            <div class="card">
+              <div class="hint">
+                This panel is just a reminder tile so you can reserve a corner of the touch panel for quickly closing or hiding docks/windows on your desktop.
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+(() => {
+  // ---------- Elements ----------
+  const hostEl = document.getElementById('host');
+  const portEl = document.getElementById('port');
+  const passwordEl = document.getElementById('password');
+  const connectBtn = document.getElementById('connectBtn');
+  const connStatus = document.getElementById('connStatus');
+  const layoutSelect = document.getElementById('layoutSelect');
+
+  const sceneCollectionSelect = document.getElementById('sceneCollectionSelect');
+  const profileSelect = document.getElementById('profileSelect');
+  const refreshCollectionsBtn = document.getElementById('refreshCollectionsBtn');
+  const refreshProfilesBtn = document.getElementById('refreshProfilesBtn');
+
+  const studioToggleBtn = document.getElementById('studioToggleBtn');
+  const takeBtn = document.getElementById('takeBtn');
+  const studioStatus = document.getElementById('studioStatus');
+  const previewScenesEl = document.getElementById('previewScenes');
+  const programScenesEl = document.getElementById('programScenes');
+
+  const scenesQuickEl = document.getElementById('scenesQuick');
+
+  const transitionSelect = document.getElementById('transitionSelect');
+  const transitionDuration = document.getElementById('transitionDuration');
+  const applyTransitionBtn = document.getElementById('applyTransitionBtn');
+  const triggerTransitionBtn = document.getElementById('triggerTransitionBtn');
+  const transitionButtons = document.getElementById('transitionButtons');
+
+  const audioFiltersHost = document.getElementById('audioFiltersHost');
+  const mixerGroupsEl = document.getElementById('mixerGroups');
+
+  const favScenesGrid = document.getElementById('favScenesGrid');
+  const favInputsGrid = document.getElementById('favInputsGrid');
+  const favScenesCount = document.getElementById('favScenesCount');
+  const favInputsCount = document.getElementById('favInputsCount');
+
+  const streamToggleBtn = document.getElementById('streamToggleBtn');
+  const recordToggleBtn = document.getElementById('recordToggleBtn');
+  const streamBadge = document.getElementById('streamBadge');
+  const recordBadge = document.getElementById('recordBadge');
+  const streamStatus = document.getElementById('streamStatus');
+  const recordStatus = document.getElementById('recordStatus');
+  const virtualToggleBtn = document.getElementById('virtualToggleBtn');
+  const virtualBadge = document.getElementById('virtualBadge');
+  const virtualStatus = document.getElementById('virtualStatus');
+
+  // ---------- Layout Profiles ----------
+  const LS_LAYOUT = 'touch_control_layout';
+
+  function applyLayoutProfile(){
+    const params = new URLSearchParams(location.search);
+    const forced = params.get('layout'); // e.g. ?layout=y70
+
+    if (forced){
+      document.body.dataset.layout = forced;
+      localStorage.setItem(LS_LAYOUT, forced);
+      layoutSelect.value = forced;
+      return;
+    }
+
+    const stored = localStorage.getItem(LS_LAYOUT);
+    if (stored){
+      document.body.dataset.layout = stored;
+      layoutSelect.value = stored;
+    }else{
+      layoutSelect.value = '';
+    }
+  }
+
+  layoutSelect.addEventListener('change', () => {
+    const val = layoutSelect.value || '';
+    document.body.dataset.layout = val;
+    if (val) localStorage.setItem(LS_LAYOUT, val);
+    else localStorage.removeItem(LS_LAYOUT);
+  });
+
+  document.querySelectorAll('[data-layout]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const val = btn.getAttribute('data-layout') || '';
+      layoutSelect.value = val;
+      document.body.dataset.layout = val;
+      if (val) localStorage.setItem(LS_LAYOUT, val);
+      else localStorage.removeItem(LS_LAYOUT);
+    });
+  });
+
+  applyLayoutProfile();
+
+  // ---------- WebSocket / OBS5 ----------
+  let ws = null;
+  let requestId = 1;
+  const pending = new Map();
+  let identified = false;
+
+  function setStatus(text){
+    connStatus.textContent = text;
+  }
+
+  function connect(){
+    if (ws){
+      try{ ws.close(); }catch{}
+      ws = null;
+    }
+
+    const host = hostEl.value || '127.0.0.1';
+    const port = Number(portEl.value) || 4455;
+    const url = `ws://${host}:${port}`;
+
+    setStatus('Connecting...');
+    connectBtn.disabled = true;
+
+    ws = new WebSocket(url);
+
+    ws.onopen = () => setStatus('Socket open, waiting for Hello...');
+    ws.onclose = () => {
+      identified = false;
+      setStatus('Disconnected.');
+      takeBtn.disabled = true;
+      studioStatus.textContent = 'Unknown.';
+      streamBadge.textContent = 'Unknown';
+      recordBadge.textContent = 'Unknown';
+    };
+
+    ws.onerror = () => setStatus('WebSocket error.');
+
+    ws.onmessage = async (ev) => {
+      let msg;
+      try { msg = JSON.parse(ev.data); } catch { return; }
+
+      if (msg.op === 0) {
+        await handleHello(msg.d || {});
+      } else if (msg.op === 2) {
+        handleIdentified();
+      } else if (msg.op === 5) {
+        const { eventType, eventData } = msg.d || {};
+        if (eventType) handleEvent(eventType, eventData || {});
+      } else if (msg.op === 7) {
+        handleRequestResponse(msg.d || {});
+      }
+    };
+  }
+
+  function disconnect(){
+    if (ws){
+      try{ ws.close(); }catch{}
+      ws = null;
+    }
+  }
+
+  async function call(requestType, requestData = {}){
+    if (!ws || ws.readyState !== WebSocket.OPEN){
+      throw new Error('Socket not open');
+    }
+
+    const id = String(requestId++);
+    return new Promise((resolve, reject) => {
+      pending.set(id, { resolve, reject });
+      ws.send(JSON.stringify({
+        op: 6,
+        d: {
+          requestId: id,
+          requestType,
+          requestData
+        }
+      }));
+    });
+  }
+
+  async function handleHello(data){
+    const rpcVer = data?.rpcVersion;
+    const serverName = data?.obsWebSocketVersion || 'OBS';
+    setStatus(`Hello from ${serverName} (RPC v${rpcVer ?? '?'})`);
+
+    const password = passwordEl.value;
+    if (password){
+      const resp = await call('GetAuthRequired', {});
+      if (resp?.d?.authRequired){
+        // OBS WebSocket 5 no longer uses GetAuthRequired; this is here for safety if bridging older versions
+      }
+    }
+
+    await identify();
+  }
+
+  async function identify(){
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+
+    const rpcVer = 1;
+    ws.send(JSON.stringify({
+      op: 1,
+      d: {
+        rpcVersion: rpcVer,
+        eventSubscriptions: 0xFFFFFFFF
+      }
+    }));
+  }
+
+  function handleIdentified(){
+    identified = true;
+    setStatus('Connected & Identified.');
+    connectBtn.disabled = false;
+    initialLoad().catch(err => console.error(err));
+  }
+
+  function handleRequestResponse(data){
+    const id = data.requestId;
+    if (!id) return;
+    const entry = pending.get(id);
+    if (!entry) return;
+    pending.delete(id);
+
+    const { requestStatus, responseData } = data;
+    if (requestStatus?.result){
+      entry.resolve({ requestStatus, responseData });
+    }else{
+      entry.reject(new Error(requestStatus?.comment ?? 'Request failed'));
+    }
+  }
+
+  function flattenLevels(levels){
+    try{
+      if (!Array.isArray(levels)) return [];
+      if (levels.flat) return levels.flat(3);
+      const out = [];
+      for (const v of levels){
+        if (Array.isArray(v)) out.push(...v);
+        else out.push(v);
+      }
+      return out;
+    }catch{
+      return [];
+    }
+  }
+
+  function handleEvent(eventType, eventData){
+    if (eventType === 'InputVolumeMeters'){
+      const inputs = eventData?.inputs ?? [];
+      for (const input of inputs){
+        const name = input.inputName;
+        const levels = input.inputLevelsMul || input.inputLevels || input.inputLevelsDb;
+        if (!levels) continue;
+
+        let max = 0;
+        const flat = flattenLevels(levels);
+        for (const v of flat){
+          const n = Number(v);
+          if (!isNaN(n)) max = Math.max(max, n);
+        }
+
+        const pct = Math.max(0, Math.min(100, Math.round(max * 100)));
+        const meter = document.querySelector(`.meter-bar[data-input="${CSS.escape(name)}"]`);
+        if (meter){
+          meter.style.width = pct + '%';
+        }
+      }
+    }
+
+    if (eventType === 'CurrentProgramSceneChanged' ||
+        eventType === 'CurrentPreviewSceneChanged' ||
+        eventType === 'StudioModeStateChanged'){
+      loadStudio();
+      loadScenesQuick();
+      renderFavoriteScenes();
+    }
+
+    if (eventType === 'InputMuteStateChanged' || eventType === 'InputVolumeChanged'){
+      renderFavoriteInputs();
+    }
+
+    if (eventType === 'StreamStateChanged' ||
+        eventType === 'RecordStateChanged' ||
+        eventType === 'VirtualCamStateChanged'){
+      loadLive();
+      loadVirtualCam();
+    }
+  }
+
+  function bindSocket(){
+    ws.onopen = () => setStatus('Socket open, waiting for Hello...');
+    ws.onclose = () => {
+      identified = false;
+      setStatus('Disconnected.');
+      takeBtn.disabled = true;
+      studioStatus.textContent = 'Unknown.';
+      streamBadge.textContent = 'Unknown';
+      recordBadge.textContent = 'Unknown';
+    };
+
+    ws.onerror = () => setStatus('WebSocket error.');
+
+    ws.onmessage = async (ev) => {
+      let msg;
+      try { msg = JSON.parse(ev.data); } catch { return; }
+
+      if (msg.op === 0) {
+        await handleHello(msg.d || {});
+      } else if (msg.op === 2) {
+        handleIdentified();
+      } else if (msg.op === 5) {
+        const { eventType, eventData } = msg.d || {};
+        if (eventType) handleEvent(eventType, eventData || {});
+      } else if (msg.op === 7) {
+        handleRequestResponse(msg.d || {});
+      }
+    };
+  }
+
+  connectBtn.addEventListener('click', () => {
+    if (!ws || ws.readyState !== WebSocket.OPEN){
+      connect();
+    }else{
+      disconnect();
+      connectBtn.disabled = false;
+      setStatus('Disconnected.');
+    }
+  });
+
+  // ---------- Scenes & Studio ----------
+  async function loadSceneCollections(){
+    try{
+      const r = await call('GetSceneCollectionList');
+      const collections = r.responseData?.sceneCollections ?? [];
+      sceneCollectionSelect.innerHTML = '';
+      for (const col of collections){
+        const opt = document.createElement('option');
+        opt.value = col.sceneCollectionName;
+        opt.textContent = col.sceneCollectionName;
+        if (col.sceneCollectionName === r.responseData?.currentSceneCollectionName){
+          opt.selected = true;
+        }
+        sceneCollectionSelect.appendChild(opt);
+      }
+    }catch(e){
+      console.error(e);
+    }
+  }
+
+  async function loadProfiles(){
+    try{
+      const r = await call('GetProfileList');
+      const profiles = r.responseData?.profiles ?? [];
+      profileSelect.innerHTML = '';
+      for (const prof of profiles){
+        const opt = document.createElement('option');
+        opt.value = prof.profileName;
+        opt.textContent = prof.profileName;
+        if (prof.profileName === r.responseData?.currentProfileName){
+          opt.selected = true;
+        }
+        profileSelect.appendChild(opt);
+      }
+    }catch(e){
+      console.error(e);
+    }
+  }
+
+  async function setSceneCollection(name){
+    try{
+      await call('SetCurrentSceneCollection', { sceneCollectionName: name });
+      loadSceneCollections();
+      loadStudio();
+      loadScenesQuick();
+    }catch(e){
+      console.error(e);
+    }
+  }
+
+  async function setProfile(name){
+    try{
+      await call('SetCurrentProfile', { profileName: name });
+      loadProfiles();
+    }catch(e){
+      console.error(e);
+    }
+  }
+
+  sceneCollectionSelect.addEventListener('change', () => {
+    const val = sceneCollectionSelect.value;
+    if (val) setSceneCollection(val);
+  });
+
+  profileSelect.addEventListener('change', () => {
+    const val = profileSelect.value;
+    if (val) setProfile(val);
+  });
+
+  refreshCollectionsBtn.addEventListener('click', () => loadSceneCollections());
+  refreshProfilesBtn.addEventListener('click', () => loadProfiles());
+
+  async function loadStudio(){
+    if (!identified) return;
+
+    try{
+      const studioMode = await call('GetStudioModeEnabled');
+      const isEnabled = !!studioMode.responseData?.studioModeEnabled;
+      studioStatus.textContent = isEnabled ? 'Studio Mode ON' : 'Studio Mode OFF';
+      studioStatus.classList.toggle('badge-ok', isEnabled);
+      studioStatus.classList.toggle('badge-danger', !isEnabled);
+      takeBtn.disabled = !isEnabled;
+
+      const scenesResp = await call('GetSceneList');
+      const scenes = scenesResp.responseData?.scenes ?? [];
+      const currentProgram = scenesResp.responseData?.currentProgramSceneName;
+      const currentPreview = scenesResp.responseData?.currentPreviewSceneName;
+
+      programScenesEl.innerHTML = '';
+      previewScenesEl.innerHTML = '';
+
+      for (const scene of scenes){
+        const rowProgram = document.createElement('div');
+        rowProgram.className = 'list-row';
+        const spanProgram = document.createElement('span');
+        spanProgram.textContent = scene.sceneName;
+        rowProgram.appendChild(spanProgram);
+
+        if (scene.sceneName === currentProgram){
+          const badge = document.createElement('span');
+          badge.className = 'badge badge-ok';
+          badge.textContent = 'Program';
+          rowProgram.appendChild(badge);
+        }else{
+          const btn = document.createElement('button');
+          btn.className = 'ghost small';
+          btn.textContent = 'Set Program';
+          btn.onclick = () => {
+            call('SetCurrentProgramScene', { sceneName: scene.sceneName }).catch(e => console.error(e));
+          };
+          rowProgram.appendChild(btn);
+        }
+        programScenesEl.appendChild(rowProgram);
+
+        const rowPreview = document.createElement('div');
+        rowPreview.className = 'list-row';
+        const spanPreview = document.createElement('span');
+        spanPreview.textContent = scene.sceneName;
+        rowPreview.appendChild(spanPreview);
+
+        if (scene.sceneName === currentPreview){
+          const badgePrev = document.createElement('span');
+          badgePrev.className = 'badge badge-soft';
+          badgePrev.textContent = 'Preview';
+          rowPreview.appendChild(badgePrev);
+        }else{
+          const btnPrev = document.createElement('button');
+          btnPrev.className = 'ghost small';
+          btnPrev.textContent = 'Set Preview';
+          btnPrev.onclick = () => {
+            call('SetCurrentPreviewScene', { sceneName: scene.sceneName }).catch(e => console.error(e));
+          };
+          rowPreview.appendChild(btnPrev);
+        }
+        previewScenesEl.appendChild(rowPreview);
+      }
+    }catch(e){
+      console.error(e);
+    }
+  }
+
+  async function loadScenesQuick(){
+    if (!identified) return;
+    try{
+      const resp = await call('GetSceneList');
+      const scenes = resp.responseData?.scenes ?? [];
+      const currentProgram = resp.responseData?.currentProgramSceneName;
+
+      scenesQuickEl.innerHTML = '';
+      const list = document.createElement('div');
+      list.className = 'list';
+
+      for (const scene of scenes){
+        const row = document.createElement('div');
+        row.className = 'list-row';
+        const span = document.createElement('span');
+        span.textContent = scene.sceneName;
+        row.appendChild(span);
+
+        const right = document.createElement('div');
+        right.className = 'scene-badges';
+
+        if (scene.sceneName === currentProgram){
+          const badge = document.createElement('span');
+          badge.className = 'badge badge-ok';
+          badge.textContent = 'Program';
+          right.appendChild(badge);
+        }else{
+          const btn = document.createElement('button');
+          btn.className = 'ghost small';
+          btn.textContent = 'Cut';
+          btn.onclick = () => {
+            call('SetCurrentProgramScene', { sceneName: scene.sceneName }).catch(e => console.error(e));
+          };
+          right.appendChild(btn);
+        }
+
+        const favBtn = makeSceneFavoriteButton(scene.sceneName);
+        right.appendChild(favBtn);
+
+        row.appendChild(right);
+        list.appendChild(row);
+      }
+
+      scenesQuickEl.appendChild(list);
+    }catch(e){
+      console.error(e);
+    }
+  }
+
+  studioToggleBtn.addEventListener('click', async () => {
+    if (!identified) return;
+    try{
+      const resp = await call('GetStudioModeEnabled');
+      const enabled = !!resp.responseData?.studioModeEnabled;
+      await call('SetStudioModeEnabled', { studioModeEnabled: !enabled });
+      loadStudio();
+    }catch(e){
+      console.error(e);
+    }
+  });
+
+  takeBtn.addEventListener('click', async () => {
+    if (!identified) return;
+    try{
+      await call('TriggerStudioModeTransition');
+      loadStudio();
+    }catch(e){
+      console.error(e);
+    }
+  });
+
+  // ---------- Transitions ----------
+  async function loadTransitions(){
+    if (!identified) return;
+    try{
+      const resp = await call('GetSceneTransitionList');
+      const transitions = resp.responseData?.transitions ?? [];
+      const current = resp.responseData?.currentSceneTransitionName;
+
+      transitionSelect.innerHTML = '';
+      for (const t of transitions){
+        const opt = document.createElement('option');
+        opt.value = t.transitionName;
+        opt.textContent = t.transitionName;
+        if (t.transitionName === current) opt.selected = true;
+        transitionSelect.appendChild(opt);
+      }
+
+      const currentResp = await call('GetCurrentSceneTransition');
+      const duration = currentResp.responseData?.transitionDuration;
+      if (typeof duration === 'number'){
+        transitionDuration.value = duration;
+      }
+
+      const buttons = [
+        { name: 'Cut', duration: 0 },
+        { name: 'Fade 200ms', duration: 200 },
+        { name: 'Fade 500ms', duration: 500 },
+        { name: 'Fade 1000ms', duration: 1000 }
+      ];
+      transitionButtons.innerHTML = '';
+      for (const b of buttons){
+        const btn = document.createElement('button');
+        btn.className = 'ghost small';
+        btn.textContent = b.name;
+        btn.onclick = async () => {
+          if (!identified) return;
+          try{
+            await call('SetCurrentSceneTransitionDuration', { transitionDuration: b.duration });
+            await call('TriggerStudioModeTransition');
+            loadTransitions();
+          }catch(e){
+            console.error(e);
+          }
+        };
+        transitionButtons.appendChild(btn);
+      }
+    }catch(e){
+      console.error(e);
+    }
+  }
+
+  applyTransitionBtn.addEventListener('click', async () => {
+    if (!identified) return;
+    const name = transitionSelect.value;
+    const duration = Number(transitionDuration.value) || 0;
+    try{
+      await call('SetCurrentSceneTransition', { transitionName: name });
+      await call('SetCurrentSceneTransitionDuration', { transitionDuration: duration });
+      loadTransitions();
+    }catch(e){
+      console.error(e);
+    }
+  });
+
+  triggerTransitionBtn.addEventListener('click', async () => {
+    if (!identified) return;
+    try{
+      await call('TriggerStudioModeTransition');
+      loadTransitions();
+    }catch(e){
+      console.error(e);
+    }
+  });
+
+  // ---------- Audio Mixer ----------
+  const LS_FAV_SCENES = 'touch_control_fav_scenes';
+  const LS_FAV_INPUTS = 'touch_control_fav_inputs';
+
+  function getFavScenes(){
+    try{
+      const raw = localStorage.getItem(LS_FAV_SCENES);
+      if (!raw) return [];
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : [];
+    }catch{
+      return [];
+    }
+  }
+
+  function setFavScenes(list){
+    try{
+      localStorage.setItem(LS_FAV_SCENES, JSON.stringify(Array.from(new Set(list))));
+    }catch{}
+  }
+
+  function getFavInputs(){
+    try{
+      const raw = localStorage.getItem(LS_FAV_INPUTS);
+      if (!raw) return [];
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : [];
+    }catch{
+      return [];
+    }
+  }
+
+  function setFavInputs(list){
+    try{
+      localStorage.setItem(LS_FAV_INPUTS, JSON.stringify(Array.from(new Set(list))));
+    }catch{}
+  }
+
+  function makeSceneFavoriteButton(sceneName){
+    const btn = document.createElement('button');
+    btn.className = 'fav-icon';
+    btn.innerHTML = '★';
+
+    function sync(){
+      const favs = getFavScenes();
+      btn.classList.toggle('active', favs.includes(sceneName));
+    }
+
+    btn.onclick = () => {
+      const favs = getFavScenes();
+      const idx = favs.indexOf(sceneName);
+      if (idx === -1) favs.push(sceneName);
+      else favs.splice(idx, 1);
+      setFavScenes(favs);
+      sync();
+      renderFavoriteScenes();
+    };
+
+    sync();
+    return btn;
+  }
+
+  function makeInputFavoriteButton(inputName){
+    const btn = document.createElement('button');
+    btn.className = 'fav-icon';
+    btn.innerHTML = '★';
+
+    function sync(){
+      const favs = getFavInputs();
+      btn.classList.toggle('active', favs.includes(inputName));
+    }
+
+    btn.onclick = () => {
+      const favs = getFavInputs();
+      const idx = favs.indexOf(inputName);
+      if (idx === -1) favs.push(inputName);
+      else favs.splice(idx, 1);
+      setFavInputs(favs);
+      sync();
+      renderFavoriteInputs();
+    };
+
+    sync();
+    return btn;
+  }
+
+  async function loadAudioMixer(){
+    if (!identified) return;
+    try{
+      const resp = await call('GetInputList');
+      const inputs = resp.responseData?.inputs ?? [];
+
+      mixerGroupsEl.innerHTML = '';
+
+      for (const input of inputs){
+        const item = document.createElement('div');
+        item.className = 'mixer-item';
+
+        const labelRow = document.createElement('div');
+        labelRow.className = 'mixer-label';
+
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = input.inputName;
+        labelRow.appendChild(nameSpan);
+
+        const favBtn = makeInputFavoriteButton(input.inputName);
+        labelRow.appendChild(favBtn);
+
+        item.appendChild(labelRow);
+
+        const meterWrap = document.createElement('div');
+        meterWrap.className = 'meter-wrap';
+
+        const meterBar = document.createElement('div');
+        meterBar.className = 'meter-bar';
+        meterBar.dataset.input = input.inputName;
+
+        meterWrap.appendChild(meterBar);
+        item.appendChild(meterWrap);
+
+        const actions = document.createElement('div');
+        actions.className = 'mixer-actions';
+
+        const muteBtn = document.createElement('button');
+        muteBtn.className = 'ghost small';
+        muteBtn.textContent = 'Toggle Mute';
+        muteBtn.onclick = async () => {
+          try{
+            const state = await call('GetInputMute', { inputName: input.inputName });
+            const muted = !!state.responseData?.inputMuted;
+            await call('SetInputMute', { inputName: input.inputName, inputMuted: !muted });
+            loadAudioMixer();
+          }catch(e){
+            console.error(e);
+          }
+        };
+        actions.appendChild(muteBtn);
+
+        const volBtn = document.createElement('button');
+        volBtn.className = 'ghost small';
+        volBtn.textContent = 'Vol - / +';
+        volBtn.onclick = async () => {
+          try{
+            const state = await call('GetInputVolume', { inputName: input.inputName });
+            const volMul = state.responseData?.inputVolumeMul ?? 1;
+            const newVol = Math.max(0, Math.min(4, volMul + 0.1));
+            await call('SetInputVolume', { inputName: input.inputName, inputVolumeMul: newVol });
+            loadAudioMixer();
+          }catch(e){
+            console.error(e);
+          }
+        };
+        actions.appendChild(volBtn);
+
+        item.appendChild(actions);
+        mixerGroupsEl.appendChild(item);
+      }
+    }catch(e){
+      console.error(e);
+    }
+  }
+
+  function makeFavSceneCard(name){
+    const card = document.createElement('div');
+    card.className = 'fav-card';
+
+    const header = document.createElement('div');
+    header.className = 'fav-card-header';
+
+    const title = document.createElement('div');
+    title.className = 'fav-card-name';
+    title.textContent = name;
+
+    const favBtn = makeSceneFavoriteButton(name);
+
+    header.appendChild(title);
+    header.appendChild(favBtn);
+    card.appendChild(header);
+
+    const controls = document.createElement('div');
+    controls.className = 'fav-card-controls';
+
+    const cutBtn = document.createElement('button');
+    cutBtn.className = 'primary small';
+    cutBtn.textContent = 'Cut';
+    cutBtn.onclick = () => {
+      call('SetCurrentProgramScene', { sceneName: name }).catch(e => console.error(e));
+    };
+    controls.appendChild(cutBtn);
+
+    const toPreviewBtn = document.createElement('button');
+    toPreviewBtn.className = 'ghost small';
+    toPreviewBtn.textContent = 'Set Preview';
+    toPreviewBtn.onclick = () => {
+      call('SetCurrentPreviewScene', { sceneName: name }).catch(e => console.error(e));
+    };
+    controls.appendChild(toPreviewBtn);
+
+    card.appendChild(controls);
+
+    return card;
+  }
+
+  function makeFavInputCard(input){
+    const card = document.createElement('div');
+    card.className = 'fav-card';
+
+    const header = document.createElement('div');
+    header.className = 'fav-card-header';
+
+    const title = document.createElement('div');
+    title.className = 'fav-card-name';
+    title.textContent = input.inputName;
+
+    const favBtn = makeInputFavoriteButton(input.inputName);
+
+    header.appendChild(title);
+    header.appendChild(favBtn);
+    card.appendChild(header);
+
+    const controls = document.createElement('div');
+    controls.className = 'fav-card-controls';
+
+    const muteBtn = document.createElement('button');
+    muteBtn.className = 'ghost small';
+    muteBtn.textContent = 'Toggle Mute';
+    muteBtn.onclick = async () => {
+      try{
+        const state = await call('GetInputMute', { inputName: input.inputName });
+        const muted = !!state.responseData?.inputMuted;
+        await call('SetInputMute', { inputName: input.inputName, inputMuted: !muted });
+        renderFavoriteInputs();
+      }catch(e){
+        console.error(e);
+      }
+    };
+    controls.appendChild(muteBtn);
+
+    const volDownBtn = document.createElement('button');
+    volDownBtn.className = 'ghost small';
+    volDownBtn.textContent = 'Vol -';
+    volDownBtn.onclick = async () => {
+      try{
+        const state = await call('GetInputVolume', { inputName: input.inputName });
+        const volMul = state.responseData?.inputVolumeMul ?? 1;
+        const newVol = Math.max(0, volMul - 0.1);
+        await call('SetInputVolume', { inputName: input.inputName, inputVolumeMul: newVol });
+        renderFavoriteInputs();
+      }catch(e){
+        console.error(e);
+      }
+    };
+    controls.appendChild(volDownBtn);
+
+    const volUpBtn = document.createElement('button');
+    volUpBtn.className = 'ghost small';
+    volUpBtn.textContent = 'Vol +';
+    volUpBtn.onclick = async () => {
+      try{
+        const state = await call('GetInputVolume', { inputName: input.inputName });
+        const volMul = state.responseData?.inputVolumeMul ?? 1;
+        const newVol = Math.min(4, volMul + 0.1);
+        await call('SetInputVolume', { inputName: input.inputName, inputVolumeMul: newVol });
+        renderFavoriteInputs();
+      }catch(e){
+        console.error(e);
+      }
+    };
+    controls.appendChild(volUpBtn);
+
+    card.appendChild(controls);
+
+    return card;
+  }
+
+  async function loadAudio(){
+    await loadAudioMixer();
+    await renderFavoriteInputs();
+  }
+
+  async function renderFavoriteScenes(){
+    const favs = getFavScenes();
+    favScenesCount.textContent = favs.length;
+    favScenesGrid.innerHTML = '';
+
+    if (favs.length === 0){
+      favScenesGrid.innerHTML = '<div class="hint">No favorite scenes pinned yet. Tap ★ beside a scene to add it here.</div>';
+      return;
+    }
+
+    try{
+      const resp = await call('GetSceneList');
+      const scenes = resp.responseData?.scenes ?? [];
+      const byName = new Map(scenes.map(s => [s.sceneName, s]));
+      const ordered = favs.filter(n => byName.has(n));
+
+      if (ordered.length === 0){
+        favScenesGrid.innerHTML = '<div class="hint">Favorite scenes not found in current collection.</div>';
+        return;
+      }
+
+      for (const name of ordered){
+        favScenesGrid.appendChild(makeFavSceneCard(name));
+      }
+    }catch(e){
+      console.error(e);
+    }
+  }
+
+  async function renderFavoriteInputs(){
+    const favs = getFavInputs();
+    favInputsCount.textContent = favs.length;
+    favInputsGrid.innerHTML = '';
+
+    if (favs.length === 0){
+      favInputsGrid.innerHTML = '<div class="hint">No favorite audio sources pinned yet. Tap ★ beside an input to add it here.</div>';
+      return;
+    }
+
+    try{
+      const resp = await call('GetInputList');
+      const inputs = resp.responseData?.inputs ?? [];
+      const byName = new Map(inputs.map(i => [i.name ?? i.inputName, i]));
+      const ordered = favs.filter(n => byName.has(n));
+
+      if (ordered.length === 0){
+        favInputsGrid.innerHTML = '<div class="hint">Favorites not found in current inputs.</div>';
+        return;
+      }
+
+      for (const name of ordered){
+        favInputsGrid.appendChild(makeFavInputCard(byName.get(name)));
+      }
+    }catch(e){
+      console.error(e);
+    }
+  }
+
+  // ---------- Live Outputs ----------
+  async function loadStreamStatus(){
+    let active = false;
+    let reconnecting = false;
+    let timecode = null;
+
+    try{
+      const r = await call('GetStreamStatus');
+      active = !!r.responseData?.outputActive;
+      reconnecting = !!r.responseData?.outputReconnecting;
+      timecode = r.responseData?.outputTimecode;
+    }catch{
+      try{
+        const r = await call('GetOutputStatus', { outputName: 'stream' });
+        active = !!r.responseData?.outputActive;
+        reconnecting = !!r.responseData?.outputReconnecting;
+        timecode = r.responseData?.outputTimecode;
+      }catch{}
+    }
+
+    streamBadge.textContent = active ? (reconnecting ? 'Reconnecting' : 'Live') : 'Off';
+    streamToggleBtn.textContent = active ? 'Stop Stream' : 'Start Stream';
+    streamStatus.textContent = timecode ? `Time: ${timecode}` : '';
+    return active;
+  }
+
+  async function loadRecordStatus(){
+    let active = false;
+    let paused = false;
+    let timecode = null;
+
+    try{
+      const r = await call('GetRecordStatus');
+      active = !!r.responseData?.outputActive;
+      paused = !!r.responseData?.outputPaused;
+      timecode = r.responseData?.outputTimecode;
+    }catch{
+      try{
+        const r = await call('GetOutputStatus', { outputName: 'record' });
+        active = !!r.responseData?.outputActive;
+        paused = !!r.responseData?.outputPaused;
+        timecode = r.responseData?.outputTimecode;
+      }catch{}
+    }
+
+    recordBadge.textContent = active ? (paused ? 'Paused' : 'Recording') : 'Off';
+    recordToggleBtn.textContent = active ? 'Stop Record' : 'Start Record';
+    recordStatus.textContent = timecode ? `Time: ${timecode}` : '';
+    return active;
+  }
+
+  async function loadVirtualCam(){
+    if (!identified || !virtualToggleBtn || !virtualBadge || !virtualStatus) return;
+
+    let active = false;
+    let timecode = null;
+
+    try{
+      const r = await call('GetVirtualCamStatus');
+      active = !!r.responseData?.outputActive;
+      timecode = r.responseData?.outputTimecode;
+    }catch{
+      try{
+        const r = await call('GetOutputStatus', { outputName: 'virtualcam' });
+        active = !!r.responseData?.outputActive;
+        timecode = r.responseData?.outputTimecode;
+      }catch{}
+    }
+
+    virtualBadge.textContent = active ? 'On' : 'Off';
+    virtualToggleBtn.textContent = active ? 'Stop Virtual Cam' : 'Start Virtual Cam';
+    virtualStatus.textContent = active
+      ? (timecode ? `Time: ${timecode}` : 'Virtual Cam is active.')
+      : 'Virtual Cam is off.';
+
+    return active;
+  }
+
+  async function loadLive(){
+    if (!identified) return;
+    await Promise.allSettled([loadStreamStatus(), loadRecordStatus()]);
+  }
+
+  streamToggleBtn.onclick = async () => {
+    if (!identified) return;
+    let active = false;
+    try{ active = await loadStreamStatus(); }catch{}
+    try{
+      if (active) await call('StopStream');
+      else await call('StartStream');
+    }catch(e){ console.error(e); }
+    loadStreamStatus();
+  };
+
+  recordToggleBtn.onclick = async () => {
+    if (!identified) return;
+    let active = false;
+    try{ active = await loadRecordStatus(); }catch{}
+    try{
+      if (active) await call('StopRecord');
+      else await call('StartRecord');
+    }catch(e){ console.error(e); }
+    loadRecordStatus();
+  };
+
+  if (virtualToggleBtn){
+    virtualToggleBtn.onclick = async () => {
+      if (!identified) return;
+
+      let active = false;
+      try{ active = await loadVirtualCam(); }catch{}
+
+      try{
+        if (active){
+          await call('StopVirtualCam');
+        }else{
+          await call('StartVirtualCam');
+        }
+      }catch(e){
+        console.error(e);
+      }
+
+      loadVirtualCam();
+    };
+  }
+
+  // ---------- Initial load ----------
+  async function initialLoad(){
+    if (!identified) return;
+
+    await Promise.allSettled([
+      loadSceneCollections(),
+      loadProfiles(),
+      loadLive(),
+      loadTransitions(),
+      loadScenesQuick(),
+      loadStudio(),
+      loadAudio(),
+      loadVirtualCam()
+    ]);
+
+    renderFavoriteScenes();
+  }
+
+})();
+</script>
+<script>
+(() => {
+  const views = Array.from(document.querySelectorAll('.view'));
+
+  function showView(id){
+    for (const v of views){
+      v.classList.toggle('active', v.id === id);
+    }
+  }
+
+  // Tile buttons
+  document.querySelectorAll('.tile-btn[data-view-target]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.getAttribute('data-view-target');
+      if (target) showView(target);
+    });
+  });
+
+  // Back buttons
+  document.querySelectorAll('[data-view-back]').forEach(btn => {
+    btn.addEventListener('click', () => showView('view-home'));
+  });
+})();
+</script>
+<script>
+// Mirror connection status text into the header pill
+(() => {
+  const main = document.getElementById('connStatus');
+  const pill = document.getElementById('connStatusHeader');
+  if (!main || !pill) return;
+  const sync = () => { pill.textContent = main.textContent || ' '; };
+  const obs = new MutationObserver(sync);
+  obs.observe(main, { childList:true, subtree:true, characterData:true });
+  sync();
+})();
+</script>
+
+</body>
+</html>
