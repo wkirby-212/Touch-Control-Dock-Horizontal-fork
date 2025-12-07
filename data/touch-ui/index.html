@@ -406,7 +406,7 @@
         <div class="tile-sub">Record / Stream</div>
       </button>
       <button class="tile-btn" data-view-target="view-mic">
-        <div class="tile-main">Mic</div>
+        <div class="tile-main">Favourites</div>
       </button>
       <button class="tile-btn" data-view-target="view-audio">
         <div class="tile-main">Audio</div>
@@ -417,12 +417,6 @@
       <button class="tile-btn" data-view-target="view-virtual">
         <div class="tile-main">Virtual</div>
         <div class="tile-sub">Cam</div>
-      </button>
-      <button class="tile-btn" data-view-target="view-exit">
-        <div class="tile-main">Exit</div>
-      </button>
-      <button class="tile-btn" data-view-target="view-home">
-        <div class="tile-main">Home</div>
       </button>
     </div>
   </section>
@@ -521,7 +515,7 @@
   <section id="view-mic" class="view" hidden>
     <div class="panel-header">
       <button class="back-btn" data-view-back>&larr; Home</button>
-      <h2>Mic &amp; Favorite Audio</h2>
+      <h2>Favourites</h2>
     </div>
     <div class="panel-body">
       <div class="card">
@@ -620,8 +614,14 @@
     </div>
     <div class="panel-body">
       <div class="card">
+        <h3>Status <span id="virtualCamBadge" class="badge">Unknown</span></h3>
+        <div class="status" id="virtualCamStatus">Virtual camera status unavailable.</div>
+        <div class="row" style="margin-top:16px;">
+          <button id="virtualCamToggleBtn" class="primary" style="flex:1;">Start Virtual Cam</button>
+        </div>
         <div class="hint">
-          This UI focuses on scenes, audio and live controls. Use your main application window to start or stop the virtual camera for now.
+          This button sends a start/stop request to the OBS virtual camera. If nothing happens,
+          check that the virtual camera feature is installed and enabled inside OBS.
         </div>
       </div>
     </div>
@@ -687,6 +687,10 @@
   const recordBadge = document.getElementById('recordBadge');
   const streamStatus = document.getElementById('streamStatus');
   const recordStatus = document.getElementById('recordStatus');
+
+  const virtualCamBadge = document.getElementById('virtualCamBadge');
+  const virtualCamStatus = document.getElementById('virtualCamStatus');
+  const virtualCamToggleBtn = document.getElementById('virtualCamToggleBtn');
 
   // ---------- Layout Profiles ----------
   const LS_LAYOUT = 'touch_control_layout';
@@ -887,6 +891,10 @@
 
     if (eventType === 'StreamStateChanged' || eventType === 'RecordStateChanged'){
       loadLive();
+    }
+
+    if (eventType === 'VirtualcamStateChanged'){
+      loadVirtualCamStatus();
     }
   }
 
@@ -1123,6 +1131,41 @@
     if (!identified) return;
     await Promise.allSettled([loadStreamStatus(), loadRecordStatus()]);
   }
+
+  // ---------- Virtual Cam ----------
+  async function loadVirtualCamStatus(){
+    if (!identified || !virtualCamBadge || !virtualCamToggleBtn || !virtualCamStatus) return;
+
+    let active = false;
+    let timecode = null;
+
+    try{
+      const r = await call('GetVirtualCamStatus');
+      active = !!(r.responseData && r.responseData.outputActive);
+      timecode = r.responseData && r.responseData.outputTimecode;
+    }catch(e){
+      console.error(e);
+    }
+
+    virtualCamBadge.textContent = active ? 'On' : 'Off';
+    virtualCamToggleBtn.textContent = active ? 'Stop Virtual Cam' : 'Start Virtual Cam';
+    virtualCamStatus.textContent = timecode ? `Time: ${timecode}` : (active ? 'Virtual camera is running.' : 'Virtual camera is stopped.');
+    return active;
+  }
+
+  if (virtualCamToggleBtn){
+    virtualCamToggleBtn.onclick = async () => {
+      if (!identified) return;
+      let active = false;
+      try{ active = await loadVirtualCamStatus(); }catch(e){ console.error(e); }
+      try{
+        if (active) await call('StopVirtualCam');
+        else await call('StartVirtualCam');
+      }catch(e){ console.error(e); }
+      loadVirtualCamStatus();
+    };
+  }
+
 
   streamToggleBtn.onclick = async () => {
     if (!identified) return;
@@ -1921,7 +1964,8 @@
       loadTransitions(),
       loadScenesQuick(),
       loadStudio(),
-      loadAudio()
+      loadAudio(),
+      loadVirtualCamStatus()
     ]);
 
     renderFavoriteScenes();
